@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.4</span>
+    <span class="logo-sub">BELT TENSION v1.5</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -660,7 +660,10 @@ async function startMic(silent=false){
     let ph=0,pc=0;
     if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
     SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
-    if(S.measuring&&msess)msess.collect(ph,pc,fd,sr,fs);
+    if(S.measuring&&msess){
+      const rmsVal=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
+      msess.collect(ph,pc,fd,sr,fs,rmsVal);
+    }
   });
   return true;
 }
@@ -698,10 +701,11 @@ function startMProc(){
   const col=[];let cur=0,lt=0;
   const T0=Date.now(),TO=12000;
 
-  msess={collect(hz,conf,fd,sr,fs){
-    if(!hz||conf<0.5)return;
+  msess={collect(hz,conf,fd,sr,fs,rmsVal){
+    if(!hz||conf<0.75)return;          // höhere Konfidenzschwelle
+    if((rmsVal||0)<0.015)return;       // RMS-Gate: kein Hintergrundrauschen
     const now=Date.now();
-    if(now-lt<350)return;
+    if(now-lt<600)return;              // 600ms Cooldown gegen Doppelmessungen
     if(now-T0>TO){if(col.length>0)fin();return;}
     lt=now;
     // Amplitude am Peak-Bin normalisieren (0..1)
