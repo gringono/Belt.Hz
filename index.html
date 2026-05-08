@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>BELT.Hz</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="theme-color" content="#050f06">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="BELT.Hz">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050f06;--bg2:#0a1a0c;--bg3:#030804;--border:#163020;--border2:#1e4028;--green:#00ff41;--green-dim:#00cc33;--green-mid:#4db870;--green-dark:#2a7a3a;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
+html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:var(--font);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto}
+#header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-size:20px;font-weight:700;letter-spacing:5px;color:var(--green)}
+.logo-sub{font-size:9px;letter-spacing:2px;color:var(--green-dark);margin-left:10px}
+.logo-by{font-size:9px;letter-spacing:1px;color:var(--border2);margin-left:8px}
+.status-row{display:flex;align-items:center;gap:8px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--border2)}
+.sdot.active{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+.sdot.warn{background:var(--warn)}.sdot.err{background:var(--err)}
+.stxt{font-size:10px;letter-spacing:1px;color:var(--green-dark)}
+#mic-select{background:var(--bg2);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:3px 6px;border-radius:3px;max-width:160px}
+#tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:8px;font-size:10px;letter-spacing:2px;text-align:center;cursor:pointer;color:var(--green-dark);background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font)}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover:not(.active){color:var(--green-mid)}
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tpanel{display:none;flex:1;overflow:hidden}.tpanel.active{display:flex}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pg{0%,100%{opacity:1;text-shadow:0 0 20px var(--green)}50%{opacity:.7;text-shadow:none}}
+#panel-messen{flex-direction:row}
+#sidebar{width:202px;min-width:202px;border-right:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+#canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.clbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.csel{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--green-dim);font-family:var(--font);font-size:11px;padding:5px;border-radius:3px}
+.brow{display:flex;gap:3px}
+.bseg{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--green-dark);font-size:10px;padding:5px 2px;border-radius:3px;font-family:var(--font);cursor:pointer;text-align:center}
+.bseg.on{background:#001808;border-color:var(--green);color:var(--green)}
+.bseg:hover:not(.on){border-color:var(--green-dark);color:var(--green-mid)}
+.irow{display:flex;align-items:center;gap:6px}
+.inp{width:62px;background:var(--bg2);border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:13px;padding:4px 6px;border-radius:3px;text-align:right}
+.inp:focus{outline:none;border-color:var(--green-dim)}
+.unit{font-size:11px;color:var(--green-mid)}
+.muline{font-size:9px;color:var(--green-dark);margin-top:2px}
+.hbtn{font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);border-radius:3px;padding:1px 5px;font-family:var(--font);margin-left:auto;color:var(--green-dim)}
+.hbtn:hover{border-color:var(--green-dim);color:var(--green)}
+.rhpanel{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:6px 8px;font-size:9px;display:none}
+.rhpanel.show{display:block}
+.rhtitle{color:var(--green);font-weight:700;font-size:10px;margin-bottom:4px}
+.rhrow{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;margin-bottom:2px}
+.rhaxis{color:var(--green-mid);font-weight:700}
+.rhhz{color:var(--green)}
+.rhnote{color:var(--green-dark);line-height:1.5;font-size:8px}
+.rhsrc{color:var(--border2);font-size:8px}
+#btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;letter-spacing:2px;padding:10px;border-radius:4px;cursor:pointer;width:100%}
+#btn-measure:hover{background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
+#spectrum{width:100%;flex:0 0 175px;display:block;cursor:crosshair}
+.axstrip{display:flex;justify-content:space-between;padding:2px 8px;background:var(--bg3);font-size:9px;color:var(--border2);border-bottom:1px solid var(--border);flex-shrink:0}
+#readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.mlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid)}
+.mval{font-size:24px;font-weight:700;color:var(--green);line-height:1.15;white-space:nowrap}
+.mval.warn{color:var(--warn)}.mval.dim{color:var(--border2)}
+.mval .u{font-size:11px;font-weight:400;margin-left:1px}
+.msub{font-size:9px;letter-spacing:1px}
+.msub.ok{color:var(--green-dark)}.msub.warn{color:var(--warn)}.msub.err{color:var(--err)}
+.cbar-w{height:3px;background:var(--border);border-radius:2px;margin-top:2px}
+.cbar{height:100%;border-radius:2px;background:var(--green);transition:width .3s}
+#bottom-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.cmpbox{margin:6px 10px 0;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;flex-shrink:0}
+.cmplbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
+.cmprow{display:flex;gap:10px;align-items:center;font-size:11px;flex-wrap:wrap}
+.cval{color:var(--green);font-weight:700}.csep{color:var(--border2)}.cwarn{color:var(--warn)}
+.histbox{margin:6px 10px 8px;flex:1;overflow-y:auto}
+.histlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
+.histrow{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--green-dim);gap:6px}
+.hn{color:var(--green-mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hh{color:var(--green);white-space:nowrap}.hnw{color:var(--green-dark);white-space:nowrap}.ht{color:var(--border2);white-space:nowrap}
+#panel-profil{flex-direction:column;overflow-y:auto;padding:12px}
+.pclist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.pcard:hover{border-color:var(--green-dark)}.pcard.act{border-color:var(--green)}
+.pcn{font-size:12px;color:var(--green);font-weight:700}
+.pcs{font-size:9px;color:var(--green-mid);margin-top:2px}
+.pcact{display:flex;gap:6px;flex-shrink:0}
+.bsm{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-size:10px;padding:3px 8px;border-radius:3px;font-family:var(--font);cursor:pointer}
+.bsm:hover{border-color:var(--green-dim);color:var(--green)}.bsm.del:hover{border-color:var(--err);color:var(--err)}
+.pform{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:14px}
+.ftitle{font-size:10px;letter-spacing:2px;color:var(--green);margin-bottom:12px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff label{font-size:9px;letter-spacing:1px;color:var(--green-mid)}
+.ff input,.ff select{background:var(--bg3);border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:12px;padding:5px 8px;border-radius:3px;width:100%}
+.ff input:focus,.ff select:focus{outline:none;border-color:var(--green-dim)}
+.fdiv{font-size:9px;letter-spacing:2px;color:var(--green-dark);border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px}
+.afnote{font-size:9px;color:var(--green-dark);margin-top:3px}
+.bsave{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer}
+.bsave:hover{background:#002a10}
+.bcancel{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer;margin-left:8px}
+#panel-referenz{flex-direction:column;overflow-y:auto;padding:12px}
+.refnote{font-size:9px;color:var(--green-dark);margin-bottom:10px;line-height:1.6;border-left:2px solid var(--border2);padding-left:8px}
+.rpcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden}
+.rphead{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.rphead:hover{background:var(--bg3)}
+.rpname{font-size:12px;color:var(--green);font-weight:700}
+.rptype{font-size:8px;letter-spacing:2px;color:var(--green-dark);border:1px solid var(--border);padding:1px 5px;border-radius:2px;margin-left:8px}
+.rpaxes{display:none;padding:4px 12px 10px;border-top:1px solid var(--border)}
+.rpaxes.open{display:block}
+.rparow{display:grid;grid-template-columns:80px 140px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.rparow:last-child{border-bottom:none}
+.rpaname{color:var(--green-mid);font-weight:700}
+.rpahz{color:var(--green);font-weight:700}
+.rpanote{color:var(--green-dark);font-size:9px;line-height:1.5}
+.rpasrc{color:var(--border2);font-size:8px}
+.usebtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:2px;cursor:pointer;white-space:nowrap;align-self:center}
+.usebtn:hover{border-color:var(--green-dim);color:var(--green)}
+.overlay{position:fixed;inset:0;background:rgba(3,8,4,.95);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.show{display:flex}
+.ovbox{background:var(--bg2);border:1px solid var(--green-dark);border-radius:6px;padding:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.ovhead{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.ovc{font-size:12px;cursor:pointer;color:var(--green-dim);border:1px solid var(--border);background:var(--bg3);border-radius:3px;padding:1px 7px;font-family:var(--font)}
+.ovc:hover{border-color:var(--green-dim);color:var(--green)}
+.minstruct{font-size:28px;font-weight:700;color:var(--green);letter-spacing:4px;text-align:center;animation:pg 1s infinite;margin-bottom:12px}
+.mprog{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.mpdot{width:12px;height:12px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3)}
+.mpdot.done{background:var(--green);border-color:var(--green);box-shadow:0 0 6px var(--green)}
+.mpdot.pend{background:var(--warn);border-color:var(--warn);animation:blink .5s infinite}
+.mread{text-align:center;font-size:12px;color:var(--green-mid);min-height:20px;margin-bottom:14px}
+.mrhz{font-size:48px;font-weight:700;color:var(--green);letter-spacing:2px}
+.mrn{font-size:16px;color:var(--green-mid);margin-top:4px}
+.mrconf{font-size:10px;color:var(--green-dark);margin-top:2px;margin-bottom:14px}
+.mbtns{display:flex;gap:10px;justify-content:center}
+.bacc{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:3px;cursor:pointer}
+.bret{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:3px;cursor:pointer}
+.axselw{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.axbtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:5px 14px;border-radius:3px;cursor:pointer}
+.axbtn.on{background:#001808;border-color:var(--green);color:var(--green)}
+.ovtxt{font-size:10px;color:var(--green-mid);line-height:1.7;margin-top:8px}
+.ovtxt b{color:var(--green)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@media(max-width:640px){#panel-messen{flex-direction:column}#sidebar{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);max-height:none}#sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}#btn-measure{margin-top:4px;flex:0 0 100%}.logo-by{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="header">
+  <div style="display:flex;align-items:center">
+    <span class="logo">BELT.Hz</span>
+    <span class="logo-sub">BELT TENSION v1.1</span>
+    <span class="logo-by">by MeltingHero</span>
+  </div>
+  <div class="status-row">
+    <select id="mic-select"></select>
+    <div class="sdot" id="sdot"></div>
+    <span class="stxt" id="stxt">BEREIT</span>
+  </div>
+</div>
+<div id="tabs">
+  <button class="tab active" data-tab="messen">MESSEN</button>
+  <button class="tab" data-tab="profil">PROFILE</button>
+  <button class="tab" data-tab="referenz">REFERENZ</button>
+</div>
+<div id="main">
+
+<!-- MESSEN -->
+<div class="tpanel active" id="panel-messen">
+  <div id="sidebar">
+    <div>
+      <div class="clbl">PROFIL</div>
+      <select class="csel" id="profil-sel"></select>
+    </div>
+    <div>
+      <div class="clbl">RIEMENTYP</div>
+      <div class="brow" id="btype-row">
+        <button class="bseg" data-val="gt2">GT2</button>
+        <button class="bseg on" data-val="gates">Gates LL-2GT</button>
+      </div>
+      <div class="muline" id="mu-display">u = 0.00659 kg/m</div>
+    </div>
+    <div>
+      <div class="clbl">BREITE</div>
+      <div class="brow" id="bwidth-row">
+        <button class="bseg on" data-val="6">6 mm</button>
+        <button class="bseg" data-val="9">9 mm</button>
+        <button class="bseg" data-val="12">12 mm</button>
+      </div>
+    </div>
+    <div>
+      <div class="clbl">FREIE SPANLAENGE <button class="hbtn" id="spanbtn">?</button></div>
+      <div class="irow">
+        <input class="inp" id="inp-span" type="number" value="285" min="50" max="2000">
+        <span class="unit">mm</span>
+      </div>
+    </div>
+    <div>
+      <div class="clbl">ZIEL-FREQUENZ <span style="color:var(--green-dark)">(opt.)</span></div>
+      <div class="irow">
+        <input class="inp" id="inp-target" type="number" placeholder="---" min="20" max="500">
+        <span class="unit">Hz</span>
+      </div>
+    </div>
+    <div>
+      <div class="clbl">WIEDERHOLUNGEN</div>
+      <div class="brow" id="reps-row">
+        <button class="bseg" data-val="1">1x</button>
+        <button class="bseg on" data-val="3">3x</button>
+        <button class="bseg" data-val="5">5x</button>
+      </div>
+    </div>
+    <div class="rhpanel" id="rhpanel">
+      <div class="rhtitle" id="rhtitle"></div>
+      <div id="rhaxes"></div>
+    </div>
+    <button id="btn-measure">MESSEN</button>
+  </div>
+  <div id="canvas-area">
+    <canvas id="spectrum"></canvas>
+    <div class="axstrip">
+      <span>30</span><span>60</span><span>100</span><span>150</span><span>200</span><span>300</span><span>420 Hz</span>
+    </div>
+    <div id="readout">
+      <div><div class="mlbl">FREQUENZ</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
+      <div><div class="mlbl">SPANNUNG</div><div class="mval dim" id="out-n">---<span class="u">N</span></div></div>
+      <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
+    </div>
+    <div id="bottom-area">
+      <div class="cmpbox">
+        <div class="cmplbl">ACHSVERGLEICH COREXY</div>
+        <div class="cmprow">
+          <span style="color:var(--green-dark)">A:</span><span class="cval" id="cmp-a">---</span>
+          <span class="csep">|</span>
+          <span style="color:var(--green-dark)">B:</span><span class="cval" id="cmp-b">---</span>
+          <span class="csep">|</span>
+          <span id="cmp-delta" style="color:var(--green-dark)">---</span>
+        </div>
+      </div>
+      <div class="histbox">
+        <div class="histlbl">VERLAUF</div>
+        <div id="histlist"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFIL -->
+<div class="tpanel" id="panel-profil">
+  <div style="width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:9px;letter-spacing:2px;color:var(--green-mid)">GESPEICHERTE PROFILE</span>
+      <button class="bsm" id="btn-new-profil">+ NEU</button>
+    </div>
+    <div class="pclist" id="pclist"></div>
+    <div class="pform" id="pform" style="display:none">
+      <div class="ftitle" id="ftitle">NEUES PROFIL</div>
+      <div class="fdiv">PROFIL-NAME</div>
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="ff"><label>NAME DES PROFILS</label><input type="text" id="f-name" placeholder="z.B. HevOrt -- A-Belt"></div>
+      </div>
+      <div class="fdiv">DRUCKER AUS REFERENZ WAEHLEN</div>
+      <div class="fgrid">
+        <div class="ff">
+          <label>DRUCKER</label>
+          <select id="f-printer-ref"><option value="">-- Benutzerdefiniert --</option></select>
+          <span class="afnote" id="f-afnote"></span>
+        </div>
+        <div class="ff">
+          <label>ACHSE</label>
+          <select id="f-axis-sel"><option value="">-- manuell --</option></select>
+        </div>
+      </div>
+      <div class="fdiv">PARAMETER</div>
+      <div class="fgrid">
+        <div class="ff"><label>RIEMENTYP</label><select id="f-btype"><option value="gates">Gates LL-2GT</option><option value="gt2">GT2 Generic</option></select></div>
+        <div class="ff"><label>BREITE (mm)</label><select id="f-bwidth"><option value="6">6</option><option value="9">9</option><option value="12">12</option></select></div>
+        <div class="ff"><label>SPANLAENGE (mm)</label><input type="number" id="f-span" placeholder="285"></div>
+        <div class="ff"><label>ZIEL-FREQUENZ (Hz)</label><input type="number" id="f-target" placeholder="110"></div>
+      </div>
+      <div style="margin-top:6px">
+        <button class="bsave" id="btn-save-profil">SPEICHERN</button>
+        <button class="bcancel" id="btn-cancel-profil">ABBRECHEN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REFERENZ -->
+<div class="tpanel" id="panel-referenz">
+  <div style="width:100%">
+    <div class="refnote">COMMUNITY-RICHTWERTE. Als Ausgangspunkt verwenden. Quellen: offizielle Docs und Community.</div>
+    <div id="reflist"></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<!-- SPAN OVERLAY -->
+<div class="overlay" id="ov-span">
+  <div class="ovbox">
+    <div class="ovhead">FREIE SPANLAENGE -- WAS MESSEN?<button class="ovc" id="ov-span-close">X</button></div>
+    <svg viewBox="0 0 460 210" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block">
+      <rect width="460" height="210" fill="#030e04"/>
+      <rect x="80" y="18" width="300" height="170" rx="3" fill="none" stroke="#163020" stroke-width="1"/>
+      <text x="240" y="12" text-anchor="middle" font-family="Courier New" font-size="8" fill="#163020">HINTEN</text>
+      <text x="240" y="210" text-anchor="middle" font-family="Courier New" font-size="8" fill="#163020">VORNE</text>
+      <circle cx="80" cy="18" r="10" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
+      <circle cx="380" cy="18" r="10" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
+      <text x="80" y="7" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">MOT</text>
+      <text x="380" y="7" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">MOT</text>
+      <circle cx="80" cy="188" r="9" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
+      <circle cx="380" cy="188" r="9" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
+      <text x="80" y="205" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">IDLER fix</text>
+      <text x="380" y="205" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">IDLER fix</text>
+      <rect x="80" y="96" width="300" height="14" rx="2" fill="#0d2a14" stroke="#2a6a40" stroke-width="1.5"/>
+      <text x="240" y="106" text-anchor="middle" font-family="Courier New" font-size="8" fill="#3a8a50">X-GANTRY</text>
+      <circle cx="80" cy="103" r="7" fill="#0a2010" stroke="#00cc33" stroke-width="1.5"/>
+      <circle cx="380" cy="103" r="7" fill="#0a2010" stroke="#00cc33" stroke-width="1.5"/>
+      <text x="64" y="89" font-family="Courier New" font-size="7" fill="#00cc33">UML.</text>
+      <text x="384" y="89" font-family="Courier New" font-size="7" fill="#00cc33">UML.</text>
+      <rect x="214" y="93" width="52" height="22" rx="2" fill="#0a2010" stroke="#2a6a40" stroke-width="1.5"/>
+      <text x="240" y="108" text-anchor="middle" font-family="Courier New" font-size="8" fill="#3a8a50">HEAD</text>
+      <line x1="80" y1="18" x2="80" y2="96" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="380" y1="18" x2="380" y2="96" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="80" y1="110" x2="214" y2="103" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="380" y1="110" x2="266" y2="103" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="80" y1="110" x2="80" y2="179" stroke="#00ff41" stroke-width="3"/>
+      <circle cx="80" cy="179" r="5" fill="#00ff41"/>
+      <circle cx="80" cy="110" r="5" fill="#00ff41"/>
+      <line x1="50" y1="110" x2="50" y2="179" stroke="#00ff41" stroke-width="1.5"/>
+      <polygon points="50,110 45,120 55,120" fill="#00ff41"/>
+      <polygon points="50,179 45,169 55,169" fill="#00ff41"/>
+      <text transform="translate(36,145) rotate(-90)" text-anchor="middle" font-family="Courier New" font-size="9" font-weight="bold" fill="#00ff41">SPANLAENGE</text>
+      <text transform="translate(18,145) rotate(-90)" text-anchor="middle" font-family="Courier New" font-size="8" fill="#4db870">HIER MESSEN</text>
+      <line x1="380" y1="103" x2="440" y2="103" stroke="#163020" stroke-width="0.5" stroke-dasharray="2,3"/>
+      <text x="443" y="106" font-family="Courier New" font-size="8" fill="#163020">Y Mitte</text>
+      <line x1="380" y1="188" x2="440" y2="188" stroke="#163020" stroke-width="0.5" stroke-dasharray="2,3"/>
+      <text x="443" y="191" font-family="Courier New" font-size="8" fill="#163020">Y=0</text>
+    </svg>
+    <div class="ovtxt">
+      <b>1.</b> Gantry in die <b>Y-Mitte</b> fahren -- reproduzierbar.<br>
+      <b>2.</b> Messen: von <b>fixem Vorder-Idler</b> zur <b>Umlenkrolle am Gantry-Ende</b> (gruene Linie).<br>
+      <b>3.</b> Kontaktpunkt am Riemen messen, nicht Rollenmittelpunkt.<br>
+      <b>4.</b> Immer dieselbe Seite + Position.<br>
+      <span style="color:var(--green-dark)">Kartesische Drucker: Carriage an Endposition, Abstand Carriage-Umlenkung zu Motorpulley.</span>
+    </div>
+  </div>
+</div>
+
+<!-- MEASURE OVERLAY -->
+<div class="overlay" id="ov-measure">
+  <div class="ovbox" style="text-align:center;padding:24px">
+    <div id="m-ready">
+      <div class="minstruct">ANZUPFEN!</div>
+      <div class="mprog" id="mprog"></div>
+      <div class="mread" id="mread">Warte auf Signal...</div>
+      <button class="bret" id="btn-mcancel">ABBRECHEN</button>
+    </div>
+    <div id="m-done" style="display:none">
+      <div class="mrhz" id="m-hz">---</div>
+      <div class="mrn" id="m-n">--- N</div>
+      <div class="mrconf" id="m-conf"></div>
+      <div style="font-size:9px;color:var(--green-mid);margin-bottom:4px;letter-spacing:1px">ALS ACHSE SPEICHERN:</div>
+      <div class="axselw" id="axbtns">
+        <button class="axbtn on" data-axis="A">A-Belt</button>
+        <button class="axbtn" data-axis="B">B-Belt</button>
+        <button class="axbtn" data-axis="X">X</button>
+        <button class="axbtn" data-axis="Y">Y</button>
+        <button class="axbtn" data-axis="Z">Z</button>
+      </div>
+      <div class="mbtns" style="margin-top:14px">
+        <button class="bacc" id="btn-accept">UEBERNEHMEN</button>
+        <button class="bret" id="btn-retry">NOCHMAL</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const REFDB=[
+  {id:'hevort',name:'HevOrt',type:'corexy',axes:[
+    {name:'A/B-Belt 12mm',targetHz:110,targetHzMax:140,spanMm:285,beltMm:12,
+     note:'Gantry Y-Mitte. Span: Vorder-Idler zu Gantry-Umlenkrolle. Gates LL-2GT 12mm.',source:'community / MirageC Discord'}
+  ]},
+  {id:'voron_v2_4',name:'Voron V2.4',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:150,beltMm:6,
+     note:'Gantry 150mm von Vorder-Idler. Ziel 110-140 Hz.',source:'docs.vorondesign.com'}
+  ]},
+  {id:'voron_trident',name:'Voron Trident',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:150,beltMm:6,
+     note:'Gantry 150mm von Z-Idler-Zentrum.',source:'docs.vorondesign.com'}
+  ]},
+  {id:'voron_v0',name:'Voron V0.2',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:null,beltMm:6,
+     note:'Gleiche Methode wie V2.4, kuerzere Spanne.',source:'docs.vorondesign.com'}
+  ]},
+  {id:'vzbot_vz235',name:'VZBot Vz235',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,spanMm:150,beltMm:6,
+     note:'Span 150mm Vorder-Idler zu Gantry-Umlenkrolle.',source:'docs.vzbot.org'}
+  ]},
+  {id:'vzbot_vz330',name:'VZBot Vz330',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,spanMm:150,beltMm:6,
+     note:'Span 150mm Vorder-Idler zu Gantry-Umlenkrolle.',source:'docs.vzbot.org'}
+  ]},
+  {id:'ratrig_vc4_400',name:'RatRig V-Core 4 (400mm)',type:'corexy',axes:[
+    {name:'CoreXY',targetHz:87,spanMm:null,beltMm:6,note:'Ziel 87 Hz +/-1 Hz. XY-Joiner zu Front-Tensioner.',source:'docs.ratrig.com'},
+    {name:'Hybrid Y',targetHz:84,spanMm:null,beltMm:6,note:'Ziel 84 Hz +/-1 Hz.',source:'docs.ratrig.com'}
+  ]},
+  {id:'ratrig_vc4_500',name:'RatRig V-Core 4 (500mm)',type:'corexy',axes:[
+    {name:'CoreXY',targetHz:87,spanMm:285,beltMm:6,note:'Ziel 87 Hz. Span 285mm.',source:'docs.ratrig.com'},
+    {name:'Hybrid Y',targetHz:84,spanMm:295,beltMm:6,note:'Ziel 84 Hz. Span 295mm.',source:'docs.ratrig.com'}
+  ]},
+  {id:'prusa_core_one',name:'Prusa Core One',type:'corexy',axes:[
+    {name:'Oberes Belt',targetHz:96,targetHzMin:90,targetHzMax:98,spanMm:null,beltMm:6,
+     note:'Ziel 96 Hz. Bereich 90-98 Hz. Max. 8 Hz Differenz zwischen oberem und unterem Belt.',source:'help.prusa3d.com (offiziell)'},
+    {name:'Unteres Belt',targetHz:92,targetHzMin:90,targetHzMax:98,spanMm:null,beltMm:6,
+     note:'Ziel 92 Hz. Unteres Belt darf etwas hoeher als oberes sein (max. 8 Hz Differenz).',source:'help.prusa3d.com (offiziell)'}
+  ]},
+  {id:'lh_stinger',name:'LH Stinger',type:'cartesian',axes:[
+    {name:'X',targetHz:108,spanMm:null,beltMm:6,note:'Carriage ganz links.',source:'github.com/lhndo/LH-Stinger/wiki'},
+    {name:'Y',targetHz:118,spanMm:null,beltMm:6,note:'Carriage ganz hinten.',source:'github.com/lhndo/LH-Stinger/wiki'},
+    {name:'Z',targetHz:90,spanMm:null,beltMm:6,note:'Hinteren Riemenabschnitt.',source:'github.com/lhndo/LH-Stinger/wiki'}
+  ]},
+  {id:'prusa_xl',name:'Prusa XL',type:'corexy',axes:[
+    {name:'A/B-Belt',targetHz:80,targetHzMin:78,targetHzMax:85,spanMm:null,beltMm:6,
+     note:'Ziel ~80 Hz auf beiden Seiten. Bereich 78-85 Hz. Alignment-Check nach Einstellung zwingend.',source:'help.prusa3d.com + community'}
+  ]},
+  {id:'prusa_mk4',name:'Prusa MK4 / MK3S+',type:'cartesian',axes:[
+    {name:'X',targetHz:null,spanMm:null,beltMm:6,note:'Prusa gibt offiz. Belt-Status-Werte (260-290), keine Hz. Hz-Werte per Spanlange berechnen.',source:'help.prusa3d.com (offiziell)'},
+    {name:'Y',targetHz:null,spanMm:null,beltMm:6,note:'Prusa gibt offiz. Belt-Status-Werte (260-290), keine Hz. Hz-Werte per Spanlange berechnen.',source:'help.prusa3d.com (offiziell)'}
+  ]},
+  {id:'ender3',name:'Creality Ender 3',type:'cartesian',axes:[
+    {name:'X',targetHz:94,spanMm:302,beltMm:6,note:'Carriage am Endanschlag. Span 302mm. Zielspannung: 6 lb / 26.7 N.',source:'benchtopmachineshop.blogspot.com'},
+    {name:'Y',targetHz:113,spanMm:253,beltMm:6,note:'Bett ganz nach vorne. Span 253mm. Zielspannung: 6 lb / 26.7 N.',source:'benchtopmachineshop.blogspot.com'}
+  ]}
+];
+const MU={gates:{6:0.00659,9:0.00989,12:0.01318},gt2:{6:0.00830,9:0.01245,12:0.01660}};
+const Store={
+  K:'belthz_p_v1',H:'belthz_h_v1',
+  lp(){try{return JSON.parse(localStorage.getItem(this.K)||'[]')}catch{return[]}},
+  sp(d){localStorage.setItem(this.K,JSON.stringify(d))},
+  lh(){try{return JSON.parse(localStorage.getItem(this.H)||'[]')}catch{return[]}},
+  sh(d){localStorage.setItem(this.H,JSON.stringify(d.slice(0,50)))}
+};
+function yin(buf,sr){
+  const TH=0.12,MF=25,XF=500;
+  const tm=Math.max(2,Math.floor(sr/XF)),tx=Math.min(Math.floor(buf.length/2)-1,Math.ceil(sr/MF));
+  if(tx<=tm)return null;
+  const yb=new Float32Array(tx+1),hl=Math.floor(buf.length/2);
+  for(let t=1;t<=tx;t++){let s=0;for(let i=0;i<hl;i++){const d=buf[i]-buf[i+t];s+=d*d;}yb[t]=s;}
+  yb[0]=1;let rs=0;
+  for(let t=1;t<=tx;t++){rs+=yb[t];yb[t]=rs>0?(yb[t]*t)/rs:1;}
+  let tau=tm,ok=false;
+  while(tau<tx){if(yb[tau]<TH){while(tau+1<tx&&yb[tau+1]<yb[tau])tau++;ok=true;break;}tau++;}
+  if(!ok)return null;
+  let bt=tau;
+  if(tau>1&&tau<tx){const a=yb[tau-1],b=yb[tau],c=yb[tau+1],dn=2*(2*b-c-a);if(Math.abs(dn)>1e-6)bt=tau+(c-a)/dn;}
+  return{frequency:sr/bt,confidence:Math.max(0,Math.min(1,1-yb[tau]))};
+}
+function tens(hz,span,bt,bw){if(!hz||hz<=0)return 0;return Math.pow(2*(span/1000)*hz,2)*MU[bt][bw];}
+const AE=(()=>{
+  let ctx,an,st,src,tdb,fdb,onF,raf,fc=0;
+  async function start(did){
+    stop();
+    try{
+      st=await navigator.mediaDevices.getUserMedia({audio:{deviceId:did?{exact:did}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      ctx=new(window.AudioContext||window.webkitAudioContext)();
+      an=ctx.createAnalyser();an.fftSize=4096;an.smoothingTimeConstant=0.65;
+      src=ctx.createMediaStreamSource(st);src.connect(an);
+      tdb=new Float32Array(an.fftSize);fdb=new Float32Array(an.frequencyBinCount);
+      loop();return true;
+    }catch(e){console.error(e);return false;}
+  }
+  function loop(){raf=requestAnimationFrame(loop);if(!an)return;fc++;an.getFloatFrequencyData(fdb);if(fc%4===0)an.getFloatTimeDomainData(tdb);if(onF)onF(fdb,tdb,ctx.sampleRate,an.fftSize);}
+  function stop(){if(raf)cancelAnimationFrame(raf);if(src){src.disconnect();src=null;}if(st){st.getTracks().forEach(t=>t.stop());st=null;}if(ctx){ctx.close().catch(()=>{});ctx=null;}an=null;fc=0;}
+  async function enumD(){try{const d=await navigator.mediaDevices.enumerateDevices();return d.filter(x=>x.kind==='audioinput');}catch{return[];}}
+  return{start,stop,enumD,sf(fn){onF=fn;},run(){return!!ctx;}};
+})();
+const SP=(()=>{
+  let cv,cx,W,H,dpr;const MN=30,MX=420;const fx=h=>(h-MN)/(MX-MN)*W;
+  function init(c){cv=c;cx=cv.getContext('2d');resize();window.addEventListener('resize',resize);idle();}
+  function resize(){dpr=window.devicePixelRatio||1;cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr;W=cv.clientWidth;H=cv.clientHeight;if(cx)cx.setTransform(dpr,0,0,dpr,0,0);}
+  function draw(fd,sr,fs,ph,pc,th){
+    if(!cx)return;
+    cx.fillStyle='#030804';cx.fillRect(0,0,W,H);
+    cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);
+    cx.strokeStyle='#0d2010';cx.lineWidth=0.5;
+    [50,60,80,100,150,200,300,400].forEach(h=>{const x=fx(h);if(x>0&&x<W){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}});
+    if(th>0){const tx=fx(th);cx.strokeStyle='#1a5a2a';cx.lineWidth=1;cx.setLineDash([3,5]);cx.beginPath();cx.moveTo(tx,0);cx.lineTo(tx,H);cx.stroke();cx.setLineDash([]);cx.fillStyle='#1a5a2a';cx.font='8px monospace';cx.fillText(th+'Hz',tx+3,11);}
+    if(!fd){idle();return;}
+    const bh=sr/fs,mn=Math.floor(MN/bh),mx=Math.ceil(MX/bh);
+    cx.save();cx.shadowBlur=14;cx.shadowColor='#00ff41';cx.strokeStyle='#00ff41';cx.lineWidth=1.5;cx.beginPath();let f1=true;
+    for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
+    cx.stroke();cx.restore();
+    cx.save();cx.globalAlpha=0.10;cx.fillStyle='#00ff41';cx.beginPath();f1=true;
+    for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
+    cx.lineTo(fx(MX),H);cx.lineTo(fx(MN),H);cx.closePath();cx.fill();cx.restore();
+    if(ph>0&&pc>0.3){const px=fx(ph);cx.strokeStyle='rgba(0,255,65,.35)';cx.lineWidth=1;cx.setLineDash([2,4]);cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();cx.setLineDash([]);cx.save();cx.shadowBlur=6;cx.shadowColor='#00ff41';cx.fillStyle='#00ff41';cx.font='bold 10px monospace';cx.fillText('> '+ph.toFixed(1)+' Hz',px+4>W-78?px-80:px+4,H-6);cx.restore();}
+  }
+  function idle(){if(!cx)return;cx.fillStyle='#030804';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);cx.strokeStyle='#0d2010';cx.lineWidth=0.5;[50,100,150,200,300].forEach(h=>{const x=fx(h);cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();});cx.fillStyle='#1a3a20';cx.font='10px monospace';cx.textAlign='center';cx.fillText('MESSEN druecken um Mikrofon zu starten',W/2,H/2);cx.textAlign='left';}
+  return{init,draw,idle,resize};
+})();
+const S={bt:'gates',bw:6,span:285,tgt:null,reps:3,pid:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,lastConf:0,micId:null};
+let msess=null;
+async function init(){
+  S.profiles=Store.lp();S.history=Store.lh();
+  if(S.profiles.length===0){
+    S.profiles=[
+      {id:'p1',name:'HevOrt -- A-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:285,targetHz:110},
+      {id:'p2',name:'HevOrt -- B-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:285,targetHz:110}
+    ];
+    Store.sp(S.profiles);
+  }
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  setupSeg('btype-row',v=>{S.bt=v;updateMu();});
+  setupSeg('bwidth-row',v=>{S.bw=parseInt(v);updateMu();});
+  setupSeg('reps-row',v=>{S.reps=parseInt(v);});
+  document.getElementById('inp-span').addEventListener('input',e=>{S.span=parseFloat(e.target.value)||285;});
+  document.getElementById('inp-target').addEventListener('input',e=>{const v=parseFloat(e.target.value);S.tgt=isNaN(v)?null:v;});
+  document.getElementById('profil-sel').addEventListener('change',e=>loadProf(e.target.value));
+  document.getElementById('btn-measure').addEventListener('click',startMeasure);
+  document.getElementById('spanbtn').addEventListener('click',()=>document.getElementById('ov-span').classList.add('show'));
+  document.getElementById('ov-span-close').addEventListener('click',()=>document.getElementById('ov-span').classList.remove('show'));
+  document.getElementById('btn-mcancel').addEventListener('click',cancelM);
+  document.getElementById('btn-accept').addEventListener('click',acceptM);
+  document.getElementById('btn-retry').addEventListener('click',()=>{document.getElementById('m-done').style.display='none';document.getElementById('m-ready').style.display='block';startMProc();});
+  document.querySelectorAll('.axbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.axbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+  document.getElementById('btn-new-profil').addEventListener('click',()=>showPForm(null));
+  document.getElementById('btn-save-profil').addEventListener('click',saveProf);
+  document.getElementById('btn-cancel-profil').addEventListener('click',()=>document.getElementById('pform').style.display='none');
+  document.getElementById('mic-select').addEventListener('change',e=>{S.micId=e.target.value||null;if(S.micOn){AE.stop();S.micOn=false;startMic();}});
+  const prs=document.getElementById('f-printer-ref');
+  REFDB.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;prs.appendChild(o);});
+  prs.addEventListener('change',onPrRef);
+  document.getElementById('f-axis-sel').addEventListener('change',onAxSel);
+  SP.init(document.getElementById('spectrum'));
+  await populateMics();
+  renderPSel();
+  if(S.profiles.length>0)loadProf(S.profiles[0].id);
+  renderPList();renderRefList();renderHist();
+  setSt('BEREIT','');
+  installPWA();
+}
+function installPWA(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW registered:', r.scope))
+      .catch(e => console.warn('SW registration failed:', e));
+  }
+}
+async function populateMics(){
+  try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());}catch{}
+  const devs=await AE.enumD();const sel=document.getElementById('mic-select');sel.innerHTML='';
+  if(devs.length===0){const o=document.createElement('option');o.textContent='Standard-Mikrofon';sel.appendChild(o);return;}
+  devs.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||'Mikrofon '+(i+1);sel.appendChild(o);});
+}
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  document.querySelectorAll('.tpanel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));
+}
+function setupSeg(id,cb){
+  const r=document.getElementById(id);
+  r.querySelectorAll('.bseg').forEach(b=>b.addEventListener('click',()=>{r.querySelectorAll('.bseg').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.val);}));
+}
+function setSeg(id,val){document.getElementById(id).querySelectorAll('.bseg').forEach(b=>b.classList.toggle('on',b.dataset.val===String(val)));}
+function updateMu(){document.getElementById('mu-display').textContent='u = '+MU[S.bt][S.bw].toFixed(5)+' kg/m';}
+function onPrRef(){
+  const pid=document.getElementById('f-printer-ref').value;
+  const asel=document.getElementById('f-axis-sel');const note=document.getElementById('f-afnote');
+  asel.innerHTML='<option value="">-- manuell --</option>';
+  if(!pid){note.textContent='';return;}
+  const pr=REFDB.find(p=>p.id===pid);if(!pr){note.textContent='';return;}
+  pr.axes.forEach(ax=>{const o=document.createElement('option');o.value=JSON.stringify(ax);o.textContent=ax.name;asel.appendChild(o);});
+  note.textContent='Achse waehlen -> Parameter werden gefuellt';
+  if(pr.axes.length===1){asel.selectedIndex=1;onAxSel();}
+}
+function onAxSel(){
+  const v=document.getElementById('f-axis-sel').value;if(!v)return;
+  try{const ax=JSON.parse(v);if(ax.spanMm)document.getElementById('f-span').value=ax.spanMm;if(ax.targetHz)document.getElementById('f-target').value=ax.targetHz;if(ax.beltMm)document.getElementById('f-bwidth').value=ax.beltMm;}catch{}
+}
+function loadProf(id){
+  const p=S.profiles.find(x=>x.id===id);if(!p)return;
+  S.pid=id;S.bt=p.beltType;S.bw=p.beltWidth;S.span=p.spanMm||285;S.tgt=p.targetHz||null;
+  setSeg('btype-row',p.beltType);setSeg('bwidth-row',p.beltWidth);
+  document.getElementById('inp-span').value=S.span;
+  document.getElementById('inp-target').value=S.tgt||'';
+  document.getElementById('profil-sel').value=id;
+  updateMu();updateRefHint(p.printerId);updateCmpFromHist();
+}
+function updateRefHint(pid){
+  const pn=document.getElementById('rhpanel'),tl=document.getElementById('rhtitle'),ax=document.getElementById('rhaxes');
+  if(!pid){pn.classList.remove('show');return;}
+  const pr=REFDB.find(p=>p.id===pid);if(!pr){pn.classList.remove('show');return;}
+  tl.textContent=pr.name+' -- Referenzwerte';
+  ax.innerHTML='';
+  pr.axes.forEach(a=>{
+    const hz=a.targetHzMax?a.targetHz+'-'+a.targetHzMax+' Hz':a.targetHz+' Hz';
+    const sp=a.spanMm?' | '+a.spanMm+'mm':'';
+    const d=document.createElement('div');
+    d.innerHTML='<div class="rhrow"><span class="rhaxis">'+a.name+'</span><span class="rhhz">'+hz+'</span><span style="color:var(--green-dark);font-size:8px">'+sp+'</span></div><div class="rhnote">'+a.note+'</div><div class="rhsrc">'+a.source+'</div>';
+    ax.appendChild(d);
+  });
+  pn.classList.add('show');
+}
+function renderPSel(){
+  const sel=document.getElementById('profil-sel');sel.innerHTML='';
+  S.profiles.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sel.appendChild(o);});
+}
+function renderPList(){
+  const list=document.getElementById('pclist');list.innerHTML='';
+  if(S.profiles.length===0){list.innerHTML='<div style="font-size:10px;color:var(--green-dark);padding:8px">Keine Profile. + NEU druecken.</div>';return;}
+  S.profiles.forEach(p=>{
+    const ref=p.printerId?REFDB.find(x=>x.id===p.printerId):null;
+    const c=document.createElement('div');c.className='pcard'+(p.id===S.pid?' act':'');
+    c.innerHTML='<div style="flex:1;min-width:0"><div class="pcn">'+p.name+'</div><div class="pcs">'+(ref?ref.name+' | ':'')+( p.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+p.beltWidth+'mm | '+p.spanMm+'mm | '+(p.targetHz?p.targetHz+'Hz':'-')+'</div></div><div class="pcact"><button class="bsm" data-e="'+p.id+'">EDIT</button><button class="bsm del" data-d="'+p.id+'">X</button></div>';
+    list.appendChild(c);
+    c.querySelector('[data-e]').addEventListener('click',e=>{e.stopPropagation();showPForm(p.id);});
+    c.querySelector('[data-d]').addEventListener('click',e=>{e.stopPropagation();if(confirm('Profil "'+p.name+'" loeschen?')){S.profiles=S.profiles.filter(x=>x.id!==p.id);Store.sp(S.profiles);renderPList();renderPSel();}});
+    c.addEventListener('click',()=>{switchTab('messen');loadProf(p.id);});
+  });
+}
+function showPForm(id){
+  const f=document.getElementById('pform');f.style.display='block';
+  if(id){
+    const p=S.profiles.find(x=>x.id===id);
+    document.getElementById('ftitle').textContent='PROFIL BEARBEITEN';
+    document.getElementById('f-name').value=p.name;
+    document.getElementById('f-btype').value=p.beltType;
+    document.getElementById('f-bwidth').value=p.beltWidth;
+    document.getElementById('f-span').value=p.spanMm||'';
+    document.getElementById('f-target').value=p.targetHz||'';
+    document.getElementById('f-printer-ref').value=p.printerId||'';
+    onPrRef();f.dataset.eid=id;
+  }else{
+    document.getElementById('ftitle').textContent='NEUES PROFIL';
+    ['f-name','f-span','f-target'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('f-btype').value='gates';document.getElementById('f-bwidth').value='6';
+    document.getElementById('f-printer-ref').value='';onPrRef();delete f.dataset.eid;
+  }
+  f.scrollIntoView({behavior:'smooth'});
+}
+function saveProf(){
+  const f=document.getElementById('pform');
+  const name=document.getElementById('f-name').value.trim();if(!name){alert('Name eingeben');return;}
+  const pid=document.getElementById('f-printer-ref').value;
+  const asel=document.getElementById('f-axis-sel');let axn='';
+  if(asel.value){try{axn=JSON.parse(asel.value).name;}catch{}}
+  const p={id:f.dataset.eid||('p_'+Date.now()),name,printerId:pid||null,axis:axn,
+    beltType:document.getElementById('f-btype').value,beltWidth:parseInt(document.getElementById('f-bwidth').value),
+    spanMm:parseFloat(document.getElementById('f-span').value)||285,targetHz:parseFloat(document.getElementById('f-target').value)||null};
+  if(f.dataset.eid){const i=S.profiles.findIndex(x=>x.id===f.dataset.eid);if(i>=0)S.profiles[i]=p;}
+  else S.profiles.push(p);
+  Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();
+}
+function renderRefList(){
+  const list=document.getElementById('reflist');list.innerHTML='';
+  REFDB.forEach((pr,idx)=>{
+    const tl=pr.type==='corexy'?'COREXY':'KARTESISCH';
+    const card=document.createElement('div');card.className='rpcard';
+    card.innerHTML='<div class="rphead"><div><span class="rpname">'+pr.name+'</span><span class="rptype">'+tl+'</span></div><span style="color:var(--green-dark);font-size:12px">+</span></div><div class="rpaxes" id="rax'+idx+'"></div>';
+    list.appendChild(card);
+    const ad=card.querySelector('#rax'+idx);
+    pr.axes.forEach(ax=>{
+      const hz=ax.targetHzMax?ax.targetHz+'-'+ax.targetHzMax+' Hz':ax.targetHz+' Hz';
+      const sp=ax.spanMm?ax.spanMm+'mm':'-';
+      const r=document.createElement('div');r.className='rparow';
+      r.innerHTML='<span class="rpaname">'+ax.name+'</span><div><span class="rpahz">'+hz+'</span><br><span style="color:var(--green-dark);font-size:9px">Span: '+sp+'</span></div><div><span class="rpanote">'+ax.note+'</span><br><span class="rpasrc">'+ax.source+'</span></div><button class="usebtn">VERWENDEN</button>';
+      ad.appendChild(r);
+      r.querySelector('.usebtn').addEventListener('click',()=>{
+        if(ax.spanMm){S.span=ax.spanMm;document.getElementById('inp-span').value=ax.spanMm;}
+        S.tgt=ax.targetHz;document.getElementById('inp-target').value=ax.targetHz;
+        switchTab('messen');
+      });
+    });
+    card.querySelector('.rphead').addEventListener('click',()=>{
+      const open=ad.classList.contains('open');
+      document.querySelectorAll('.rpaxes').forEach(d=>d.classList.remove('open'));
+      document.querySelectorAll('.rphead span:last-child').forEach(s=>s.textContent='+');
+      if(!open){ad.classList.add('open');card.querySelector('.rphead span:last-child').textContent='-';}
+    });
+  });
+}
+async function startMeasure(){
+  if(!S.micOn){const ok=await startMic();if(!ok)return;}
+  document.getElementById('m-ready').style.display='block';
+  document.getElementById('m-done').style.display='none';
+  document.getElementById('ov-measure').classList.add('show');
+  startMProc();
+}
+async function startMic(){
+  setSt('MIKROFON...','warn');
+  const ok=await AE.start(S.micId);
+  if(!ok){setSt('KEIN MIC','err');alert('Mikrofon-Zugriff verweigert.');return false;}
+  S.micOn=true;setSt('AKTIV','active');
+  AE.sf((fd,td,sr,fs)=>{
+    let ph=0,pc=0;
+    if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
+    SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
+    if(S.measuring&&msess)msess.collect(ph,pc);
+  });
+  return true;
+}
+function startMProc(){
+  S.measuring=true;const reps=S.reps;
+  const pe=document.getElementById('mprog'),re=document.getElementById('mread');
+  pe.innerHTML='';const dots=[];
+  for(let i=0;i<reps;i++){const d=document.createElement('div');d.className='mpdot';pe.appendChild(d);dots.push(d);}
+  const col=[];let cur=0,lt=0;const T0=Date.now(),TO=12000;
+  re.textContent='Warte auf Signal...';
+  if(cur<dots.length)dots[cur].classList.add('pend');
+  msess={collect(hz,conf){
+    if(!hz||conf<0.5)return;const now=Date.now();
+    if(now-lt<350)return;if(now-T0>TO){if(col.length>0)fin();return;}
+    lt=now;col.push(hz);
+    if(cur<dots.length){dots[cur].classList.remove('pend');dots[cur].classList.add('done');cur++;}
+    re.textContent=col.map(h=>h.toFixed(1)+' Hz').join(' | ');
+    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+    if(col.length>=reps)fin();
+  }};
+  function fin(){S.measuring=false;msess=null;if(col.length===0){re.textContent='Kein Signal. Nochmal versuchen.';return;}const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}
+  setTimeout(()=>{if(S.measuring){S.measuring=false;msess=null;if(col.length>0){const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}else re.textContent='Timeout -- kein Signal.'}},TO+500);
+}
+function showMR(hz,conf){
+  const n=tens(hz,S.span,S.bt,S.bw);
+  document.getElementById('m-ready').style.display='none';document.getElementById('m-done').style.display='block';
+  document.getElementById('m-hz').textContent=hz.toFixed(1)+' Hz';
+  document.getElementById('m-n').textContent=n.toFixed(1)+' N';
+  document.getElementById('m-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
+  document.getElementById('ov-measure').dataset.hz=hz;document.getElementById('ov-measure').dataset.n=n;
+}
+function cancelM(){S.measuring=false;msess=null;document.getElementById('ov-measure').classList.remove('show');}
+function acceptM(){
+  const hz=parseFloat(document.getElementById('ov-measure').dataset.hz);
+  const n=parseFloat(document.getElementById('ov-measure').dataset.n);
+  const axis=document.querySelector('.axbtn.on')?.dataset.axis||'A';
+  if(axis==='A'||axis==='X')S.cmpA={hz,axis};
+  else if(axis==='B'||axis==='Y')S.cmpB={hz,axis};
+  const p=S.profiles.find(x=>x.id===S.pid);
+  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:p?p.name:'---',axis,hz:hz.toFixed(1),n:n.toFixed(1)};
+  S.history.unshift(e);Store.sh(S.history);
+  updateReadout(hz,S.lastConf);updateCmp();renderHist();
+  document.getElementById('ov-measure').classList.remove('show');
+}
+function updateReadout(hz,conf){
+  const n=tens(hz,S.span,S.bt,S.bw);
+  const he=document.getElementById('out-hz'),ne=document.getElementById('out-n');
+  const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
+  he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
+  ne.className='mval';ne.innerHTML=n.toFixed(1)+'<span class="u">N</span>';
+  bar.style.width=(conf*100).toFixed(0)+'%';
+  bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
+  if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
+    if(d<-10){se.className='msub err';se.textContent='ZU LOCKER';}
+    else if(d>10){se.className='msub warn';se.textContent='ZU STRAFF';}
+    else{se.className='msub ok';se.textContent='IM BEREICH';}
+  }else{de.className='mval dim';de.innerHTML='---';se.textContent='';}
+}
+function updateCmp(){
+  if(S.cmpA)document.getElementById('cmp-a').textContent=S.cmpA.hz.toFixed(1)+' Hz';
+  if(S.cmpB)document.getElementById('cmp-b').textContent=S.cmpB.hz.toFixed(1)+' Hz';
+  if(S.cmpA&&S.cmpB){const d=Math.abs(S.cmpA.hz-S.cmpB.hz);const el=document.getElementById('cmp-delta');if(d<3){el.className='cval';el.textContent='Delta '+d.toFixed(1)+' Hz ok';}else{el.className='cwarn';el.textContent='Delta '+d.toFixed(1)+' Hz -- nachspannen';}}
+}
+function updateCmpFromHist(){
+  const p=S.profiles.find(x=>x.id===S.pid);if(!p)return;S.cmpA=null;S.cmpB=null;
+  S.history.slice(0,10).forEach(h=>{if(h.profile===p.name){if((h.axis==='A'||h.axis==='X')&&!S.cmpA)S.cmpA={hz:parseFloat(h.hz),axis:h.axis};if((h.axis==='B'||h.axis==='Y')&&!S.cmpB)S.cmpB={hz:parseFloat(h.hz),axis:h.axis};}});
+  updateCmp();
+}
+function renderHist(){
+  const list=document.getElementById('histlist');list.innerHTML='';
+  if(S.history.length===0){list.innerHTML='<div style="font-size:10px;color:var(--border2);padding:4px 0">Noch keine Messungen.</div>';return;}
+  S.history.slice(0,20).forEach(h=>{const r=document.createElement('div');r.className='histrow';r.innerHTML='<span class="hn">'+h.profile+' | '+h.axis+'</span><span class="hh">'+h.hz+' Hz</span><span class="hnw">'+h.n+' N</span><span class="ht">'+h.time+'</span>';list.appendChild(r);});
+}
+function setSt(t,tp){document.getElementById('stxt').textContent=t;document.getElementById('sdot').className='sdot'+(tp?' '+tp:'');}
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
