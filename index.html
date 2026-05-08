@@ -6,26 +6,29 @@
 <title>BELT.Hz</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-<meta name="theme-color" content="#050f06">
+<meta name="theme-color" content="#060e07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="BELT.Hz">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#050f06;--bg2:#0a1a0c;--bg3:#030804;--border:#163020;--border2:#1e4028;--green:#00ff41;--green-dim:#00cc33;--green-mid:#4db870;--green-dark:#2a7a3a;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
-html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:var(--font);overflow:hidden}
+/* BRIGHTER COLORS -- green-dark war #2a7a3a, kaum lesbar */
+:root{--bg:#060e07;--bg2:#0d1f10;--bg3:#040a05;--border:#1c3828;--border2:#315c42;--green:#00ff41;--green-dim:#00dd38;--green-mid:#5ecb78;--green-dark:#3fb358;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
+html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:var(--font);overflow:hidden}
 #app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto}
 #header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .logo{font-size:20px;font-weight:700;letter-spacing:5px;color:var(--green)}
 .logo-sub{font-size:9px;letter-spacing:2px;color:var(--green-dark);margin-left:10px}
 .logo-by{font-size:9px;letter-spacing:1px;color:var(--border2);margin-left:8px}
-.status-row{display:flex;align-items:center;gap:8px}
+.status-row{display:flex;align-items:center;gap:6px}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--border2)}
 .sdot.active{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
 .sdot.warn{background:var(--warn)}.sdot.err{background:var(--err)}
 .stxt{font-size:10px;letter-spacing:1px;color:var(--green-dark)}
-#mic-select{background:var(--bg2);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:3px 6px;border-radius:3px;max-width:160px}
+#mic-select{background:var(--bg2);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:3px 6px;border-radius:3px;max-width:150px}
+.mic-refresh{background:var(--bg2);border:1px solid var(--border);color:var(--green-dark);font-family:var(--font);font-size:10px;padding:3px 7px;border-radius:3px;cursor:pointer;flex-shrink:0}
+.mic-refresh:hover{border-color:var(--green-dark);color:var(--green)}
 #tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:8px;font-size:10px;letter-spacing:2px;text-align:center;cursor:pointer;color:var(--green-dark);background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font)}
 .tab.active{color:var(--green);border-bottom-color:var(--green)}
@@ -59,7 +62,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
 .rhnote{color:var(--green-dark);line-height:1.5;font-size:8px}
 .rhsrc{color:var(--border2);font-size:8px}
 #btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;letter-spacing:2px;padding:10px;border-radius:4px;cursor:pointer;width:100%}
-#btn-measure:hover{background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
+#btn-measure:hover:not(:disabled){background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
+#btn-measure:disabled{opacity:.45;cursor:default}
 #spectrum{width:100%;flex:0 0 175px;display:block;cursor:crosshair}
 .axstrip{display:flex;justify-content:space-between;padding:2px 8px;background:var(--bg3);font-size:9px;color:var(--border2);border-bottom:1px solid var(--border);flex-shrink:0}
 #readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -71,6 +75,16 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
 .msub.ok{color:var(--green-dark)}.msub.warn{color:var(--warn)}.msub.err{color:var(--err)}
 .cbar-w{height:3px;background:var(--border);border-radius:2px;margin-top:2px}
 .cbar{height:100%;border-radius:2px;background:var(--green);transition:width .3s}
+
+/* INLINE MEASURE PANEL */
+#measure-inline{background:var(--bg2);border-top:2px solid var(--green-dark);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;text-align:center;display:none}
+.mi-anzupfen{font-size:18px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:6px}
+.mi-read{font-size:11px;color:var(--green-mid);min-height:18px;margin-bottom:8px;letter-spacing:.5px}
+.mi-hz-big{font-size:36px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
+.mi-n{font-size:14px;color:var(--green-mid);margin-top:2px}
+.mi-conf{font-size:9px;color:var(--green-dark);margin-bottom:8px}
+.mi-axis-lbl{font-size:9px;letter-spacing:1px;color:var(--green-mid);margin-bottom:4px}
+
 #bottom-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
 .cmpbox{margin:6px 10px 0;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;flex-shrink:0}
 .cmplbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
@@ -125,25 +139,22 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
 .ovhead{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .ovc{font-size:12px;cursor:pointer;color:var(--green-dim);border:1px solid var(--border);background:var(--bg3);border-radius:3px;padding:1px 7px;font-family:var(--font)}
 .ovc:hover{border-color:var(--green-dim);color:var(--green)}
-.minstruct{font-size:28px;font-weight:700;color:var(--green);letter-spacing:4px;text-align:center;animation:pg 1s infinite;margin-bottom:12px}
-.mprog{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
-.mpdot{width:12px;height:12px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3)}
-.mpdot.done{background:var(--green);border-color:var(--green);box-shadow:0 0 6px var(--green)}
-.mpdot.pend{background:var(--warn);border-color:var(--warn);animation:blink .5s infinite}
-.mread{text-align:center;font-size:12px;color:var(--green-mid);min-height:20px;margin-bottom:14px}
-.mrhz{font-size:48px;font-weight:700;color:var(--green);letter-spacing:2px}
-.mrn{font-size:16px;color:var(--green-mid);margin-top:4px}
-.mrconf{font-size:10px;color:var(--green-dark);margin-top:2px;margin-bottom:14px}
-.mbtns{display:flex;gap:10px;justify-content:center}
-.bacc{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:3px;cursor:pointer}
-.bret{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:3px;cursor:pointer}
-.axselw{display:flex;gap:8px;justify-content:center;margin:10px 0}
-.axbtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:5px 14px;border-radius:3px;cursor:pointer}
+/* dot progress */
+.mprog{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
+.mpdot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border2);background:var(--bg3);transition:background .2s,box-shadow .2s}
+.mpdot.pend{border-color:var(--warn) !important;animation:blink .5s infinite}
+.axselw{display:flex;gap:8px;justify-content:center;margin:8px 0 6px}
+.axbtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:5px 12px;border-radius:3px;cursor:pointer}
 .axbtn.on{background:#001808;border-color:var(--green);color:var(--green)}
+.mbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.bacc{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 18px;border-radius:3px;cursor:pointer}
+.bacc:hover{background:#002a10}
+.bret{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 14px;border-radius:3px;cursor:pointer}
+.bret:hover{border-color:var(--green-dark);color:var(--green-mid)}
 .ovtxt{font-size:10px;color:var(--green-mid);line-height:1.7;margin-top:8px}
 .ovtxt b{color:var(--green)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-@media(max-width:640px){#panel-messen{flex-direction:column}#sidebar{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);max-height:none}#sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}#btn-measure{margin-top:4px;flex:0 0 100%}.logo-by{display:none}}
+@media(max-width:640px){#panel-messen{flex-direction:column}#sidebar{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);max-height:44vh;overflow-y:auto;flex-shrink:0}#canvas-area{flex:1;min-height:120px}#sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}#btn-measure{margin-top:4px;flex:0 0 100%}.logo-by{display:none}}
 </style>
 </head>
 <body>
@@ -151,11 +162,12 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.1</span>
+    <span class="logo-sub">BELT TENSION v1.2</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
     <select id="mic-select"></select>
+    <button class="mic-refresh" id="btn-mic-refresh" title="Mikrofone neu laden">↺</button>
     <div class="sdot" id="sdot"></div>
     <span class="stxt" id="stxt">BEREIT</span>
   </div>
@@ -228,6 +240,37 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
       <div><div class="mlbl">SPANNUNG</div><div class="mval dim" id="out-n">---<span class="u">N</span></div></div>
       <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
     </div>
+
+    <!-- INLINE MEASURE PANEL (ersetzt den Overlay) -->
+    <div id="measure-inline">
+      <!-- Phase 1: Messen läuft -->
+      <div id="mi-progress">
+        <div class="mi-anzupfen">ANZUPFEN!</div>
+        <div class="mprog" id="mprog-inline"></div>
+        <div class="mi-read" id="mread-inline">Warte auf Signal...</div>
+        <button class="bret" id="btn-mcancel-inline" style="margin-top:4px">ABBRECHEN</button>
+      </div>
+      <!-- Phase 2: Ergebnis -->
+      <div id="mi-done" style="display:none">
+        <div class="mi-hz-big" id="mi-hz">---</div>
+        <div class="mi-n" id="mi-n">--- N</div>
+        <div class="mi-conf" id="mi-conf"></div>
+        <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
+        <div class="axselw" id="axbtns">
+          <button class="axbtn on" data-axis="A">A-Belt</button>
+          <button class="axbtn" data-axis="B">B-Belt</button>
+          <button class="axbtn" data-axis="X">X</button>
+          <button class="axbtn" data-axis="Y">Y</button>
+          <button class="axbtn" data-axis="Z">Z</button>
+        </div>
+        <div class="mbtns" style="margin-top:10px">
+          <button class="bacc" id="btn-accept">UEBERNEHMEN</button>
+          <button class="bret" id="btn-retry">NOCHMAL</button>
+          <button class="bret" id="btn-cancel-done">ABBRECHEN</button>
+        </div>
+      </div>
+    </div>
+
     <div id="bottom-area">
       <div class="cmpbox">
         <div class="cmplbl">ACHSVERGLEICH COREXY</div>
@@ -299,7 +342,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
 </div>
 </div>
 
-<!-- SPAN OVERLAY -->
+<!-- SPAN OVERLAY (bleibt erhalten) -->
 <div class="overlay" id="ov-span">
   <div class="ovbox">
     <div class="ovhead">FREIE SPANLAENGE -- WAS MESSEN?<button class="ovc" id="ov-span-close">X</button></div>
@@ -347,35 +390,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-dim);font-family:va
       <b>3.</b> Kontaktpunkt am Riemen messen, nicht Rollenmittelpunkt.<br>
       <b>4.</b> Immer dieselbe Seite + Position.<br>
       <span style="color:var(--green-dark)">Kartesische Drucker: Carriage an Endposition, Abstand Carriage-Umlenkung zu Motorpulley.</span>
-    </div>
-  </div>
-</div>
-
-<!-- MEASURE OVERLAY -->
-<div class="overlay" id="ov-measure">
-  <div class="ovbox" style="text-align:center;padding:24px">
-    <div id="m-ready">
-      <div class="minstruct">ANZUPFEN!</div>
-      <div class="mprog" id="mprog"></div>
-      <div class="mread" id="mread">Warte auf Signal...</div>
-      <button class="bret" id="btn-mcancel">ABBRECHEN</button>
-    </div>
-    <div id="m-done" style="display:none">
-      <div class="mrhz" id="m-hz">---</div>
-      <div class="mrn" id="m-n">--- N</div>
-      <div class="mrconf" id="m-conf"></div>
-      <div style="font-size:9px;color:var(--green-mid);margin-bottom:4px;letter-spacing:1px">ALS ACHSE SPEICHERN:</div>
-      <div class="axselw" id="axbtns">
-        <button class="axbtn on" data-axis="A">A-Belt</button>
-        <button class="axbtn" data-axis="B">B-Belt</button>
-        <button class="axbtn" data-axis="X">X</button>
-        <button class="axbtn" data-axis="Y">Y</button>
-        <button class="axbtn" data-axis="Z">Z</button>
-      </div>
-      <div class="mbtns" style="margin-top:14px">
-        <button class="bacc" id="btn-accept">UEBERNEHMEN</button>
-        <button class="bret" id="btn-retry">NOCHMAL</button>
-      </div>
     </div>
   </div>
 </div>
@@ -463,6 +477,14 @@ function yin(buf,sr){
   return{frequency:sr/bt,confidence:Math.max(0,Math.min(1,1-yb[tau]))};
 }
 function tens(hz,span,bt,bw){if(!hz||hz<=0)return 0;return Math.pow(2*(span/1000)*hz,2)*MU[bt][bw];}
+
+// Farben fuer Messungen -- dynamisch, N Farben gleichmaessig verteilt
+function measureColors(n){
+  // Farbpalette die gut auf dunkelgruenen Hintergrund lesbar ist
+  const base=['#00ffff','#ffff00','#ff8800','#ff44ff','#4488ff','#ff4444','#00ff88','#ffaa00','#88ff00','#ff88ff'];
+  return Array.from({length:n},(_,i)=>base[i%base.length]);
+}
+
 const AE=(()=>{
   let ctx,an,st,src,tdb,fdb,onF,raf,fc=0;
   async function start(did){
@@ -470,6 +492,7 @@ const AE=(()=>{
     try{
       st=await navigator.mediaDevices.getUserMedia({audio:{deviceId:did?{exact:did}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
       ctx=new(window.AudioContext||window.webkitAudioContext)();
+      if(ctx.state==='suspended')await ctx.resume();
       an=ctx.createAnalyser();an.fftSize=4096;an.smoothingTimeConstant=0.65;
       src=ctx.createMediaStreamSource(st);src.connect(an);
       tdb=new Float32Array(an.fftSize);fdb=new Float32Array(an.frequencyBinCount);
@@ -481,32 +504,61 @@ const AE=(()=>{
   async function enumD(){try{const d=await navigator.mediaDevices.enumerateDevices();return d.filter(x=>x.kind==='audioinput');}catch{return[];}}
   return{start,stop,enumD,sf(fn){onF=fn;},run(){return!!ctx;}};
 })();
+
 const SP=(()=>{
-  let cv,cx,W,H,dpr;const MN=30,MX=420;const fx=h=>(h-MN)/(MX-MN)*W;
-  function init(c){cv=c;cx=cv.getContext('2d');resize();window.addEventListener('resize',resize);idle();}
+  let cv,cx,W,H,dpr;
+  let peaks=[];  // [{hz, color}, ...]  -- Peak-Hold pro Messung
+  const MN=30,MX=420;
+  const fx=h=>(h-MN)/(MX-MN)*W;
+  function init(c){
+    cv=c;cx=cv.getContext('2d');resize();
+    window.addEventListener('resize',resize);
+    idle();
+    // Tap auf Canvas startet Mic (iOS user gesture)
+    cv.addEventListener('click',()=>{if(!S.micOn)startMic();});
+  }
   function resize(){dpr=window.devicePixelRatio||1;cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr;W=cv.clientWidth;H=cv.clientHeight;if(cx)cx.setTransform(dpr,0,0,dpr,0,0);}
+  function setPeaks(arr){peaks=arr;}
   function draw(fd,sr,fs,ph,pc,th){
     if(!cx)return;
-    cx.fillStyle='#030804';cx.fillRect(0,0,W,H);
+    cx.fillStyle='#040a05';cx.fillRect(0,0,W,H);
     cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);
     cx.strokeStyle='#0d2010';cx.lineWidth=0.5;
     [50,60,80,100,150,200,300,400].forEach(h=>{const x=fx(h);if(x>0&&x<W){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}});
     if(th>0){const tx=fx(th);cx.strokeStyle='#1a5a2a';cx.lineWidth=1;cx.setLineDash([3,5]);cx.beginPath();cx.moveTo(tx,0);cx.lineTo(tx,H);cx.stroke();cx.setLineDash([]);cx.fillStyle='#1a5a2a';cx.font='8px monospace';cx.fillText(th+'Hz',tx+3,11);}
     if(!fd){idle();return;}
     const bh=sr/fs,mn=Math.floor(MN/bh),mx=Math.ceil(MX/bh);
+    // Live-Spektrum (gruen)
     cx.save();cx.shadowBlur=14;cx.shadowColor='#00ff41';cx.strokeStyle='#00ff41';cx.lineWidth=1.5;cx.beginPath();let f1=true;
     for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
     cx.stroke();cx.restore();
     cx.save();cx.globalAlpha=0.10;cx.fillStyle='#00ff41';cx.beginPath();f1=true;
     for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
     cx.lineTo(fx(MX),H);cx.lineTo(fx(MN),H);cx.closePath();cx.fill();cx.restore();
+    // Peak-Hold Linien (eine pro Messung, jede in eigener Farbe)
+    peaks.forEach((pk,i)=>{
+      if(!pk.hz||pk.hz<MN||pk.hz>MX)return;
+      const px=fx(pk.hz);
+      cx.save();
+      cx.strokeStyle=pk.color;cx.lineWidth=1.5;cx.globalAlpha=0.9;
+      cx.shadowBlur=8;cx.shadowColor=pk.color;
+      cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();
+      cx.font='bold 9px monospace';cx.fillStyle=pk.color;cx.globalAlpha=1;
+      const lbl=pk.hz.toFixed(1)+' Hz';
+      const lx=px+3>W-65?px-68:px+3;
+      cx.fillText(lbl,lx,12+i*12);
+      cx.restore();
+    });
+    // Live-Frequenz Marker
     if(ph>0&&pc>0.3){const px=fx(ph);cx.strokeStyle='rgba(0,255,65,.35)';cx.lineWidth=1;cx.setLineDash([2,4]);cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();cx.setLineDash([]);cx.save();cx.shadowBlur=6;cx.shadowColor='#00ff41';cx.fillStyle='#00ff41';cx.font='bold 10px monospace';cx.fillText('> '+ph.toFixed(1)+' Hz',px+4>W-78?px-80:px+4,H-6);cx.restore();}
   }
-  function idle(){if(!cx)return;cx.fillStyle='#030804';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);cx.strokeStyle='#0d2010';cx.lineWidth=0.5;[50,100,150,200,300].forEach(h=>{const x=fx(h);cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();});cx.fillStyle='#1a3a20';cx.font='10px monospace';cx.textAlign='center';cx.fillText('MESSEN druecken um Mikrofon zu starten',W/2,H/2);cx.textAlign='left';}
-  return{init,draw,idle,resize};
+  function idle(){if(!cx)return;cx.fillStyle='#040a05';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);cx.strokeStyle='#0d2010';cx.lineWidth=0.5;[50,100,150,200,300].forEach(h=>{const x=fx(h);cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();});cx.fillStyle='#2a6a3a';cx.font='10px monospace';cx.textAlign='center';cx.fillText('TIPPEN oder MESSEN drücken -- Mikrofon starten',W/2,H/2);cx.textAlign='left';}
+  return{init,draw,idle,resize,setPeaks};
 })();
+
 const S={bt:'gates',bw:6,span:285,tgt:null,reps:3,pid:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,lastConf:0,micId:null};
 let msess=null;
+
 async function init(){
   S.profiles=Store.lp();S.history=Store.lh();
   if(S.profiles.length===0){
@@ -526,49 +578,241 @@ async function init(){
   document.getElementById('btn-measure').addEventListener('click',startMeasure);
   document.getElementById('spanbtn').addEventListener('click',()=>document.getElementById('ov-span').classList.add('show'));
   document.getElementById('ov-span-close').addEventListener('click',()=>document.getElementById('ov-span').classList.remove('show'));
-  document.getElementById('btn-mcancel').addEventListener('click',cancelM);
+  // Inline measure panel buttons
+  document.getElementById('btn-mcancel-inline').addEventListener('click',cancelM);
+  document.getElementById('btn-cancel-done').addEventListener('click',cancelM);
   document.getElementById('btn-accept').addEventListener('click',acceptM);
-  document.getElementById('btn-retry').addEventListener('click',()=>{document.getElementById('m-done').style.display='none';document.getElementById('m-ready').style.display='block';startMProc();});
+  document.getElementById('btn-retry').addEventListener('click',()=>{
+    document.getElementById('mi-done').style.display='none';
+    document.getElementById('mi-progress').style.display='block';
+    startMProc();
+  });
   document.querySelectorAll('.axbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.axbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
   document.getElementById('btn-new-profil').addEventListener('click',()=>showPForm(null));
   document.getElementById('btn-save-profil').addEventListener('click',saveProf);
   document.getElementById('btn-cancel-profil').addEventListener('click',()=>document.getElementById('pform').style.display='none');
   document.getElementById('mic-select').addEventListener('change',e=>{S.micId=e.target.value||null;if(S.micOn){AE.stop();S.micOn=false;startMic();}});
+  // Refresh-Button fuer Mikrofone (DJI Mic 2 / Lightning fix)
+  document.getElementById('btn-mic-refresh').addEventListener('click',async()=>{
+    if(S.micOn){await populateMics(true);}else{await populateMics(false);}
+  });
   const prs=document.getElementById('f-printer-ref');
   REFDB.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;prs.appendChild(o);});
   prs.addEventListener('change',onPrRef);
   document.getElementById('f-axis-sel').addEventListener('change',onAxSel);
   SP.init(document.getElementById('spectrum'));
-  await populateMics();
+  await populateMics(false);
   renderPSel();
   if(S.profiles.length>0)loadProf(S.profiles[0].id);
   renderPList();renderRefList();renderHist();
   setSt('BEREIT','');
   installPWA();
+  // Auto-Start Mic -- silent=true: kein "KEIN MIC" wenn iOS ohne User-Gesture blockt
+  startMic(true).catch(()=>{});
 }
+
 function installPWA(){
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js')
-      .then(r => console.log('SW registered:', r.scope))
-      .catch(e => console.warn('SW registration failed:', e));
+      .then(r=>console.log('SW registered:',r.scope))
+      .catch(e=>console.warn('SW registration failed:',e));
   }
 }
-async function populateMics(){
-  try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());}catch{}
-  const devs=await AE.enumD();const sel=document.getElementById('mic-select');sel.innerHTML='';
+
+// populateMics: skipPerm=true wenn Mic schon laeuft (re-enumerate ohne neuen Stream)
+// DJI Mic 2 / Lightning: erscheint erst NACHDEM AudioSession aktiv ist
+async function populateMics(skipPerm){
+  if(!skipPerm){
+    try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());}catch{}
+  }
+  const devs=await AE.enumD();
+  const sel=document.getElementById('mic-select');
+  const prevId=S.micId;
+  sel.innerHTML='';
   if(devs.length===0){const o=document.createElement('option');o.textContent='Standard-Mikrofon';sel.appendChild(o);return;}
-  devs.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||'Mikrofon '+(i+1);sel.appendChild(o);});
+  let found=false;
+  devs.forEach((d,i)=>{
+    const o=document.createElement('option');
+    o.value=d.deviceId;
+    o.textContent=d.label||'Mikrofon '+(i+1);
+    if(d.deviceId===prevId){o.selected=true;found=true;}
+    sel.appendChild(o);
+  });
+  if(!found){S.micId=devs[0].deviceId;sel.value=devs[0].deviceId;}
 }
+
+async function startMic(silent=false){
+  if(!silent)setSt('MIKROFON...','warn');
+  const ok=await AE.start(S.micId);
+  if(!ok){if(!silent)setSt('KEIN MIC','err');return false;}
+  S.micOn=true;setSt('AKTIV','active');
+  // Re-enumerate nach Mic-Start: Lightning/USB Geraete erscheinen jetzt (DJI Mic 2 Fix)
+  await populateMics(true);
+  AE.sf((fd,td,sr,fs)=>{
+    let ph=0,pc=0;
+    if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
+    SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
+    if(S.measuring&&msess)msess.collect(ph,pc);
+  });
+  return true;
+}
+
+async function startMeasure(){
+  if(!S.micOn){const ok=await startMic(false);if(!ok){alert('Mikrofon-Zugriff verweigert.');return;}}
+  // Inline Panel vorbereiten
+  document.getElementById('mi-progress').style.display='block';
+  document.getElementById('mi-done').style.display='none';
+  document.getElementById('measure-inline').style.display='block';
+  document.getElementById('btn-measure').disabled=true;
+  document.getElementById('btn-measure').textContent='LAEUFT...';
+  startMProc();
+}
+
+function startMProc(){
+  S.measuring=true;
+  const reps=S.reps;
+  const colors=measureColors(reps);
+  SP.setPeaks([]);
+
+  const pe=document.getElementById('mprog-inline');
+  pe.innerHTML='';
+  const dots=[];
+  for(let i=0;i<reps;i++){
+    const d=document.createElement('div');
+    d.className='mpdot';
+    d.style.borderColor=colors[i];
+    pe.appendChild(d);dots.push(d);
+  }
+  document.getElementById('mread-inline').textContent='Warte auf Signal...';
+  if(dots.length>0)dots[0].classList.add('pend');
+
+  const col=[];let cur=0,lt=0;
+  const T0=Date.now(),TO=12000;
+
+  msess={collect(hz,conf){
+    if(!hz||conf<0.5)return;
+    const now=Date.now();
+    if(now-lt<350)return;
+    if(now-T0>TO){if(col.length>0)fin();return;}
+    lt=now;
+    const idx=col.length;
+    col.push(hz);
+    // Peak-Hold in Farbe dieser Messung
+    SP.setPeaks(col.map((h,i)=>({hz:h,color:colors[i]})));
+    // Dot abschliessen
+    if(cur<dots.length){
+      dots[cur].classList.remove('pend');
+      dots[cur].style.background=colors[cur];
+      dots[cur].style.borderColor=colors[cur];
+      dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+      cur++;
+    }
+    document.getElementById('mread-inline').textContent=col.map(h=>h.toFixed(1)+' Hz').join(' | ');
+    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+    if(col.length>=reps)fin();
+  }};
+
+  function fin(){
+    S.measuring=false;msess=null;
+    if(col.length===0){document.getElementById('mread-inline').textContent='Kein Signal. Nochmal versuchen.';resetMeasureBtn();return;}
+    const s=[...col].sort((a,b)=>a-b);
+    showMR(s[Math.floor(s.length/2)],S.lastConf);
+  }
+  setTimeout(()=>{
+    if(S.measuring){S.measuring=false;msess=null;
+      if(col.length>0){const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}
+      else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';resetMeasureBtn();}
+    }
+  },TO+500);
+}
+
+function showMR(hz,conf){
+  const n=tens(hz,S.span,S.bt,S.bw);
+  document.getElementById('mi-progress').style.display='none';
+  document.getElementById('mi-done').style.display='block';
+  document.getElementById('mi-hz').textContent=hz.toFixed(1)+' Hz';
+  document.getElementById('mi-n').textContent=n.toFixed(1)+' N';
+  document.getElementById('mi-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
+  document.getElementById('measure-inline').dataset.hz=hz;
+  document.getElementById('measure-inline').dataset.n=n;
+  resetMeasureBtn();
+}
+
+function resetMeasureBtn(){
+  document.getElementById('btn-measure').disabled=false;
+  document.getElementById('btn-measure').textContent='MESSEN';
+}
+
+function cancelM(){
+  S.measuring=false;msess=null;
+  SP.setPeaks([]);
+  document.getElementById('measure-inline').style.display='none';
+  resetMeasureBtn();
+}
+
+function acceptM(){
+  const hz=parseFloat(document.getElementById('measure-inline').dataset.hz);
+  const n=parseFloat(document.getElementById('measure-inline').dataset.n);
+  const axis=document.querySelector('.axbtn.on')?.dataset.axis||'A';
+  if(axis==='A'||axis==='X')S.cmpA={hz,axis};
+  else if(axis==='B'||axis==='Y')S.cmpB={hz,axis};
+  const p=S.profiles.find(x=>x.id===S.pid);
+  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:p?p.name:'---',axis,hz:hz.toFixed(1),n:n.toFixed(1)};
+  S.history.unshift(e);Store.sh(S.history);
+  SP.setPeaks([]);
+  updateReadout(hz,S.lastConf);updateCmp();renderHist();
+  document.getElementById('measure-inline').style.display='none';
+  resetMeasureBtn();
+}
+
+function updateReadout(hz,conf){
+  const n=tens(hz,S.span,S.bt,S.bw);
+  const he=document.getElementById('out-hz'),ne=document.getElementById('out-n');
+  const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
+  he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
+  ne.className='mval';ne.innerHTML=n.toFixed(1)+'<span class="u">N</span>';
+  bar.style.width=(conf*100).toFixed(0)+'%';
+  bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
+  if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
+    if(d<-10){se.className='msub err';se.textContent='ZU LOCKER';}
+    else if(d>10){se.className='msub warn';se.textContent='ZU STRAFF';}
+    else{se.className='msub ok';se.textContent='IM BEREICH';}
+  }else{de.className='mval dim';de.innerHTML='---';se.textContent='';}
+}
+
+function updateCmp(){
+  if(S.cmpA)document.getElementById('cmp-a').textContent=S.cmpA.hz.toFixed(1)+' Hz';
+  if(S.cmpB)document.getElementById('cmp-b').textContent=S.cmpB.hz.toFixed(1)+' Hz';
+  if(S.cmpA&&S.cmpB){const d=Math.abs(S.cmpA.hz-S.cmpB.hz);const el=document.getElementById('cmp-delta');if(d<3){el.className='cval';el.textContent='Delta '+d.toFixed(1)+' Hz ok';}else{el.className='cwarn';el.textContent='Delta '+d.toFixed(1)+' Hz -- nachspannen';}}
+}
+
+function updateCmpFromHist(){
+  const p=S.profiles.find(x=>x.id===S.pid);if(!p)return;S.cmpA=null;S.cmpB=null;
+  S.history.slice(0,10).forEach(h=>{if(h.profile===p.name){if((h.axis==='A'||h.axis==='X')&&!S.cmpA)S.cmpA={hz:parseFloat(h.hz),axis:h.axis};if((h.axis==='B'||h.axis==='Y')&&!S.cmpB)S.cmpB={hz:parseFloat(h.hz),axis:h.axis};}});
+  updateCmp();
+}
+
+function renderHist(){
+  const list=document.getElementById('histlist');list.innerHTML='';
+  if(S.history.length===0){list.innerHTML='<div style="font-size:10px;color:var(--border2);padding:4px 0">Noch keine Messungen.</div>';return;}
+  S.history.slice(0,20).forEach(h=>{const r=document.createElement('div');r.className='histrow';r.innerHTML='<span class="hn">'+h.profile+' | '+h.axis+'</span><span class="hh">'+h.hz+' Hz</span><span class="hnw">'+h.n+' N</span><span class="ht">'+h.time+'</span>';list.appendChild(r);});
+}
+
+function setSt(t,tp){document.getElementById('stxt').textContent=t;document.getElementById('sdot').className='sdot'+(tp?' '+tp:'');}
+
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
   document.querySelectorAll('.tpanel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));
 }
+
 function setupSeg(id,cb){
   const r=document.getElementById(id);
   r.querySelectorAll('.bseg').forEach(b=>b.addEventListener('click',()=>{r.querySelectorAll('.bseg').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.val);}));
 }
+
 function setSeg(id,val){document.getElementById(id).querySelectorAll('.bseg').forEach(b=>b.classList.toggle('on',b.dataset.val===String(val)));}
 function updateMu(){document.getElementById('mu-display').textContent='u = '+MU[S.bt][S.bw].toFixed(5)+' kg/m';}
+
 function onPrRef(){
   const pid=document.getElementById('f-printer-ref').value;
   const asel=document.getElementById('f-axis-sel');const note=document.getElementById('f-afnote');
@@ -579,10 +823,12 @@ function onPrRef(){
   note.textContent='Achse waehlen -> Parameter werden gefuellt';
   if(pr.axes.length===1){asel.selectedIndex=1;onAxSel();}
 }
+
 function onAxSel(){
   const v=document.getElementById('f-axis-sel').value;if(!v)return;
   try{const ax=JSON.parse(v);if(ax.spanMm)document.getElementById('f-span').value=ax.spanMm;if(ax.targetHz)document.getElementById('f-target').value=ax.targetHz;if(ax.beltMm)document.getElementById('f-bwidth').value=ax.beltMm;}catch{}
 }
+
 function loadProf(id){
   const p=S.profiles.find(x=>x.id===id);if(!p)return;
   S.pid=id;S.bt=p.beltType;S.bw=p.beltWidth;S.span=p.spanMm||285;S.tgt=p.targetHz||null;
@@ -592,6 +838,7 @@ function loadProf(id){
   document.getElementById('profil-sel').value=id;
   updateMu();updateRefHint(p.printerId);updateCmpFromHist();
 }
+
 function updateRefHint(pid){
   const pn=document.getElementById('rhpanel'),tl=document.getElementById('rhtitle'),ax=document.getElementById('rhaxes');
   if(!pid){pn.classList.remove('show');return;}
@@ -607,10 +854,12 @@ function updateRefHint(pid){
   });
   pn.classList.add('show');
 }
+
 function renderPSel(){
   const sel=document.getElementById('profil-sel');sel.innerHTML='';
   S.profiles.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sel.appendChild(o);});
 }
+
 function renderPList(){
   const list=document.getElementById('pclist');list.innerHTML='';
   if(S.profiles.length===0){list.innerHTML='<div style="font-size:10px;color:var(--green-dark);padding:8px">Keine Profile. + NEU druecken.</div>';return;}
@@ -624,6 +873,7 @@ function renderPList(){
     c.addEventListener('click',()=>{switchTab('messen');loadProf(p.id);});
   });
 }
+
 function showPForm(id){
   const f=document.getElementById('pform');f.style.display='block';
   if(id){
@@ -644,6 +894,7 @@ function showPForm(id){
   }
   f.scrollIntoView({behavior:'smooth'});
 }
+
 function saveProf(){
   const f=document.getElementById('pform');
   const name=document.getElementById('f-name').value.trim();if(!name){alert('Name eingeben');return;}
@@ -657,6 +908,7 @@ function saveProf(){
   else S.profiles.push(p);
   Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();
 }
+
 function renderRefList(){
   const list=document.getElementById('reflist');list.innerHTML='';
   REFDB.forEach((pr,idx)=>{
@@ -685,97 +937,7 @@ function renderRefList(){
     });
   });
 }
-async function startMeasure(){
-  if(!S.micOn){const ok=await startMic();if(!ok)return;}
-  document.getElementById('m-ready').style.display='block';
-  document.getElementById('m-done').style.display='none';
-  document.getElementById('ov-measure').classList.add('show');
-  startMProc();
-}
-async function startMic(){
-  setSt('MIKROFON...','warn');
-  const ok=await AE.start(S.micId);
-  if(!ok){setSt('KEIN MIC','err');alert('Mikrofon-Zugriff verweigert.');return false;}
-  S.micOn=true;setSt('AKTIV','active');
-  AE.sf((fd,td,sr,fs)=>{
-    let ph=0,pc=0;
-    if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
-    SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
-    if(S.measuring&&msess)msess.collect(ph,pc);
-  });
-  return true;
-}
-function startMProc(){
-  S.measuring=true;const reps=S.reps;
-  const pe=document.getElementById('mprog'),re=document.getElementById('mread');
-  pe.innerHTML='';const dots=[];
-  for(let i=0;i<reps;i++){const d=document.createElement('div');d.className='mpdot';pe.appendChild(d);dots.push(d);}
-  const col=[];let cur=0,lt=0;const T0=Date.now(),TO=12000;
-  re.textContent='Warte auf Signal...';
-  if(cur<dots.length)dots[cur].classList.add('pend');
-  msess={collect(hz,conf){
-    if(!hz||conf<0.5)return;const now=Date.now();
-    if(now-lt<350)return;if(now-T0>TO){if(col.length>0)fin();return;}
-    lt=now;col.push(hz);
-    if(cur<dots.length){dots[cur].classList.remove('pend');dots[cur].classList.add('done');cur++;}
-    re.textContent=col.map(h=>h.toFixed(1)+' Hz').join(' | ');
-    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-    if(col.length>=reps)fin();
-  }};
-  function fin(){S.measuring=false;msess=null;if(col.length===0){re.textContent='Kein Signal. Nochmal versuchen.';return;}const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}
-  setTimeout(()=>{if(S.measuring){S.measuring=false;msess=null;if(col.length>0){const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}else re.textContent='Timeout -- kein Signal.'}},TO+500);
-}
-function showMR(hz,conf){
-  const n=tens(hz,S.span,S.bt,S.bw);
-  document.getElementById('m-ready').style.display='none';document.getElementById('m-done').style.display='block';
-  document.getElementById('m-hz').textContent=hz.toFixed(1)+' Hz';
-  document.getElementById('m-n').textContent=n.toFixed(1)+' N';
-  document.getElementById('m-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
-  document.getElementById('ov-measure').dataset.hz=hz;document.getElementById('ov-measure').dataset.n=n;
-}
-function cancelM(){S.measuring=false;msess=null;document.getElementById('ov-measure').classList.remove('show');}
-function acceptM(){
-  const hz=parseFloat(document.getElementById('ov-measure').dataset.hz);
-  const n=parseFloat(document.getElementById('ov-measure').dataset.n);
-  const axis=document.querySelector('.axbtn.on')?.dataset.axis||'A';
-  if(axis==='A'||axis==='X')S.cmpA={hz,axis};
-  else if(axis==='B'||axis==='Y')S.cmpB={hz,axis};
-  const p=S.profiles.find(x=>x.id===S.pid);
-  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:p?p.name:'---',axis,hz:hz.toFixed(1),n:n.toFixed(1)};
-  S.history.unshift(e);Store.sh(S.history);
-  updateReadout(hz,S.lastConf);updateCmp();renderHist();
-  document.getElementById('ov-measure').classList.remove('show');
-}
-function updateReadout(hz,conf){
-  const n=tens(hz,S.span,S.bt,S.bw);
-  const he=document.getElementById('out-hz'),ne=document.getElementById('out-n');
-  const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
-  he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
-  ne.className='mval';ne.innerHTML=n.toFixed(1)+'<span class="u">N</span>';
-  bar.style.width=(conf*100).toFixed(0)+'%';
-  bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
-  if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
-    if(d<-10){se.className='msub err';se.textContent='ZU LOCKER';}
-    else if(d>10){se.className='msub warn';se.textContent='ZU STRAFF';}
-    else{se.className='msub ok';se.textContent='IM BEREICH';}
-  }else{de.className='mval dim';de.innerHTML='---';se.textContent='';}
-}
-function updateCmp(){
-  if(S.cmpA)document.getElementById('cmp-a').textContent=S.cmpA.hz.toFixed(1)+' Hz';
-  if(S.cmpB)document.getElementById('cmp-b').textContent=S.cmpB.hz.toFixed(1)+' Hz';
-  if(S.cmpA&&S.cmpB){const d=Math.abs(S.cmpA.hz-S.cmpB.hz);const el=document.getElementById('cmp-delta');if(d<3){el.className='cval';el.textContent='Delta '+d.toFixed(1)+' Hz ok';}else{el.className='cwarn';el.textContent='Delta '+d.toFixed(1)+' Hz -- nachspannen';}}
-}
-function updateCmpFromHist(){
-  const p=S.profiles.find(x=>x.id===S.pid);if(!p)return;S.cmpA=null;S.cmpB=null;
-  S.history.slice(0,10).forEach(h=>{if(h.profile===p.name){if((h.axis==='A'||h.axis==='X')&&!S.cmpA)S.cmpA={hz:parseFloat(h.hz),axis:h.axis};if((h.axis==='B'||h.axis==='Y')&&!S.cmpB)S.cmpB={hz:parseFloat(h.hz),axis:h.axis};}});
-  updateCmp();
-}
-function renderHist(){
-  const list=document.getElementById('histlist');list.innerHTML='';
-  if(S.history.length===0){list.innerHTML='<div style="font-size:10px;color:var(--border2);padding:4px 0">Noch keine Messungen.</div>';return;}
-  S.history.slice(0,20).forEach(h=>{const r=document.createElement('div');r.className='histrow';r.innerHTML='<span class="hn">'+h.profile+' | '+h.axis+'</span><span class="hh">'+h.hz+' Hz</span><span class="hnw">'+h.n+' N</span><span class="ht">'+h.time+'</span>';list.appendChild(r);});
-}
-function setSt(t,tp){document.getElementById('stxt').textContent=t;document.getElementById('sdot').className='sdot'+(tp?' '+tp:'');}
+
 window.addEventListener('load',init);
 </script>
 </body>
