@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.2</span>
+    <span class="logo-sub">BELT TENSION v1.3</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -535,18 +535,25 @@ const SP=(()=>{
     cx.save();cx.globalAlpha=0.10;cx.fillStyle='#00ff41';cx.beginPath();f1=true;
     for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
     cx.lineTo(fx(MX),H);cx.lineTo(fx(MN),H);cx.closePath();cx.fill();cx.restore();
-    // Peak-Hold Linien (eine pro Messung, jede in eigener Farbe)
+    // Peak-Hold Balken (horizontal, Equalizer-Stil, eine pro Messung)
     peaks.forEach((pk,i)=>{
       if(!pk.hz||pk.hz<MN||pk.hz>MX)return;
       const px=fx(pk.hz);
+      const py=H-4-(pk.amp||0.6)*(H-14);  // y = Amplitudenhöhe
+      const bw=28; // Balkenbreite px
       cx.save();
-      cx.strokeStyle=pk.color;cx.lineWidth=1.5;cx.globalAlpha=0.9;
-      cx.shadowBlur=8;cx.shadowColor=pk.color;
-      cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();
+      cx.strokeStyle=pk.color;cx.lineWidth=2.5;cx.globalAlpha=0.95;
+      cx.shadowBlur=10;cx.shadowColor=pk.color;
+      // Horizontaler Balken
+      cx.beginPath();cx.moveTo(px-bw,py);cx.lineTo(px+bw,py);cx.stroke();
+      // Kleiner vertikaler Strich an der Mitte (zeigt genaue Hz-Position)
+      cx.lineWidth=1;cx.globalAlpha=0.4;
+      cx.beginPath();cx.moveTo(px,py);cx.lineTo(px,H-4);cx.stroke();
+      // Label
       cx.font='bold 9px monospace';cx.fillStyle=pk.color;cx.globalAlpha=1;
       const lbl=pk.hz.toFixed(1)+' Hz';
-      const lx=px+3>W-65?px-68:px+3;
-      cx.fillText(lbl,lx,12+i*12);
+      const lx=px+bw+4>W-60?px-bw-62:px+bw+4;
+      cx.fillText(lbl,lx,py+3);
       cx.restore();
     });
     // Live-Frequenz Marker
@@ -652,7 +659,7 @@ async function startMic(silent=false){
     let ph=0,pc=0;
     if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
     SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
-    if(S.measuring&&msess)msess.collect(ph,pc);
+    if(S.measuring&&msess)msess.collect(ph,pc,fd,sr,fs);
   });
   return true;
 }
@@ -689,16 +696,18 @@ function startMProc(){
   const col=[];let cur=0,lt=0;
   const T0=Date.now(),TO=12000;
 
-  msess={collect(hz,conf){
+  msess={collect(hz,conf,fd,sr,fs){
     if(!hz||conf<0.5)return;
     const now=Date.now();
     if(now-lt<350)return;
     if(now-T0>TO){if(col.length>0)fin();return;}
     lt=now;
-    const idx=col.length;
-    col.push(hz);
+    // Amplitude am Peak-Bin normalisieren (0..1)
+    let amp=0.7;
+    if(fd&&sr&&fs){const bh=sr/fs;const bin=Math.round(hz/bh);if(bin<fd.length)amp=Math.max(0,Math.min(1,(fd[bin]+90)/90));}
+    col.push({hz,amp});
     // Peak-Hold in Farbe dieser Messung
-    SP.setPeaks(col.map((h,i)=>({hz:h,color:colors[i]})));
+    SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
     // Dot abschliessen
     if(cur<dots.length){
       dots[cur].classList.remove('pend');
@@ -707,7 +716,7 @@ function startMProc(){
       dots[cur].style.boxShadow='0 0 8px '+colors[cur];
       cur++;
     }
-    document.getElementById('mread-inline').textContent=col.map(h=>h.toFixed(1)+' Hz').join(' | ');
+    document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
     if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
     if(col.length>=reps)fin();
   }};
@@ -715,12 +724,12 @@ function startMProc(){
   function fin(){
     S.measuring=false;msess=null;
     if(col.length===0){document.getElementById('mread-inline').textContent='Kein Signal. Nochmal versuchen.';resetMeasureBtn();return;}
-    const s=[...col].sort((a,b)=>a-b);
-    showMR(s[Math.floor(s.length/2)],S.lastConf);
+    const s=[...col].sort((a,b)=>a.hz-b.hz);
+    showMR(s[Math.floor(s.length/2)].hz,S.lastConf);
   }
   setTimeout(()=>{
     if(S.measuring){S.measuring=false;msess=null;
-      if(col.length>0){const s=[...col].sort((a,b)=>a-b);showMR(s[Math.floor(s.length/2)],S.lastConf);}
+      if(col.length>0){const s=[...col].sort((a,b)=>a.hz-b.hz);showMR(s[Math.floor(s.length/2)].hz,S.lastConf);}
       else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';resetMeasureBtn();}
     }
   },TO+500);
