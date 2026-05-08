@@ -248,7 +248,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
         <div class="mi-anzupfen">ANZUPFEN!</div>
         <div class="mprog" id="mprog-inline"></div>
         <div class="mi-read" id="mread-inline">Warte auf Signal...</div>
-        <button class="bret" id="btn-mcancel-inline" style="margin-top:4px">ABBRECHEN</button>
       </div>
       <!-- Phase 2: Ergebnis -->
       <div id="mi-done" style="display:none">
@@ -269,6 +268,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
           <button class="bret" id="btn-cancel-done">ABBRECHEN</button>
         </div>
       </div>
+      <!-- Immer sichtbar während Messung aktiv -->
+      <button class="bret" id="btn-mcancel-inline" style="margin-top:6px">ABBRECHEN</button>
     </div>
 
     <div id="bottom-area">
@@ -669,6 +670,7 @@ async function startMeasure(){
   // Inline Panel vorbereiten
   document.getElementById('mi-progress').style.display='block';
   document.getElementById('mi-done').style.display='none';
+  document.getElementById('btn-mcancel-inline').style.display='block';
   document.getElementById('measure-inline').style.display='block';
   document.getElementById('btn-measure').disabled=true;
   document.getElementById('btn-measure').textContent='LAEUFT...';
@@ -730,7 +732,7 @@ function startMProc(){
   setTimeout(()=>{
     if(S.measuring){S.measuring=false;msess=null;
       if(col.length>0){const s=[...col].sort((a,b)=>a.hz-b.hz);showMR(s[Math.floor(s.length/2)].hz,S.lastConf);}
-      else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';resetMeasureBtn();}
+      else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';resetMeasureBtn();setTimeout(()=>cancelM(),2000);}
     }
   },TO+500);
 }
@@ -739,6 +741,7 @@ function showMR(hz,conf){
   const n=tens(hz,S.span,S.bt,S.bw);
   document.getElementById('mi-progress').style.display='none';
   document.getElementById('mi-done').style.display='block';
+  document.getElementById('btn-mcancel-inline').style.display='none';
   document.getElementById('mi-hz').textContent=hz.toFixed(1)+' Hz';
   document.getElementById('mi-n').textContent=n.toFixed(1)+' N';
   document.getElementById('mi-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
@@ -948,6 +951,17 @@ function renderRefList(){
 }
 
 window.addEventListener('load',init);
+
+// Mikrofon stoppen wenn App in Hintergrund / geschlossen
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    if(S.micOn){AE.stop();S.micOn=false;setSt('PAUSE','');}
+  }else{
+    // Wieder sichtbar: Mic neu starten falls vorher aktiv
+    if(!S.micOn)startMic(true).catch(()=>{});
+  }
+});
+window.addEventListener('pagehide',()=>{AE.stop();S.micOn=false;});
 </script>
 </body>
 </html>
