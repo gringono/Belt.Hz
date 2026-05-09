@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.2</span>
+    <span class="logo-sub">BELT TENSION v2.3</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -491,7 +491,15 @@ const AE=(()=>{
   async function start(did){
     stop();
     try{
-      st=await navigator.mediaDevices.getUserMedia({audio:{deviceId:did?{exact:did}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      // iOS Lightning: ideal statt exact, Fallback auf default
+      const constraints={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
+      if(did)constraints.audio.deviceId={ideal:did};
+      try{st=await navigator.mediaDevices.getUserMedia(constraints);}
+      catch(e1){
+        // Fallback: ohne deviceId
+        try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}
+        catch(e2){console.error('Mic fallback failed',e2);return false;}
+      };
       ctx=new(window.AudioContext||window.webkitAudioContext)();
       if(ctx.state==='suspended')await ctx.resume();
       an=ctx.createAnalyser();an.fftSize=4096;an.smoothingTimeConstant=0.65;
