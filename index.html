@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.5</span>
+    <span class="logo-sub">BELT TENSION v1.6</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -702,8 +702,8 @@ function startMProc(){
   const T0=Date.now(),TO=12000;
 
   msess={collect(hz,conf,fd,sr,fs,rmsVal){
-    if(!hz||conf<0.75)return;          // höhere Konfidenzschwelle
-    if((rmsVal||0)<0.015)return;       // RMS-Gate: kein Hintergrundrauschen
+    if(!hz||conf<0.6)return;          // Konfidenzschwelle
+    if((rmsVal||0)<0.004)return;       // RMS-Gate: nur echtes Signal
     const now=Date.now();
     if(now-lt<600)return;              // 600ms Cooldown gegen Doppelmessungen
     if(now-T0>TO){if(col.length>0)fin();return;}
