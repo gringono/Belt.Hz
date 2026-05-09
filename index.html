@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.8</span>
+    <span class="logo-sub">BELT TENSION v1.9</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -705,9 +705,9 @@ function startMProc(){
     if(!hz||conf<0.6)return;          // Konfidenzschwelle
 
     const now=Date.now();
-    if(now-lt<600)return;              // 600ms Cooldown gegen Doppelmessungen
+    if(now-lt<600)return;              // Cooldown gegen Doppelmessungen
     if(now-T0>TO){if(col.length>0)fin();return;}
-    lt=now;
+    lt=now + 900; // +900ms extra Sperrzeit nach Messung (Nachklingen)
     // Amplitude am Peak-Bin normalisieren (0..1)
     let amp=0.7;
     if(fd&&sr&&fs){const bh=sr/fs;const bin=Math.round(hz/bh);if(bin<fd.length)amp=Math.max(0,Math.min(1,(fd[bin]+90)/90));}
