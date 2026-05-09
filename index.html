@@ -81,7 +81,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .mi-anzupfen{font-size:18px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:6px}
 .mi-read{font-size:11px;color:var(--green-mid);min-height:18px;margin-bottom:8px;letter-spacing:.5px}
 .mi-hz-big{font-size:36px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
-.mi-n{font-size:14px;color:var(--green-mid);margin-top:2px}
+.mi-n{font-size:11px;color:#4af;margin-top:2px;text-shadow:0 0 8px #4af}
 .mi-conf{font-size:9px;color:var(--green-dark);margin-bottom:8px}
 .mi-axis-lbl{font-size:9px;letter-spacing:1px;color:var(--green-mid);margin-bottom:4px}
 
@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.1</span>
+    <span class="logo-sub">BELT TENSION v2.2</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -237,7 +237,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     </div>
     <div id="readout">
       <div><div class="mlbl">FREQUENZ</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
-      <div><div class="mlbl">SPANNUNG</div><div class="mval dim" id="out-n">---<span class="u">N</span></div></div>
+      <div><div class="mlbl" style="color:#4af;opacity:.7">SPANNUNG</div><div id="out-n" style="font-size:16px;color:#4af;text-shadow:0 0 8px #4af;font-weight:700">---<span style="font-size:10px;font-weight:400;margin-left:1px">N</span></div></div>
       <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
     </div>
 
@@ -399,7 +399,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 'use strict';
 const REFDB=[
   {id:'hevort',name:'HevOrt',type:'corexy',axes:[
-    {name:'A/B-Belt 12mm',targetHz:110,targetHzMax:140,spanMm:285,beltMm:12,
+    {name:'A/B-Belt 12mm',targetHz:110,targetHzMax:140,spanMm:150,beltMm:12,
      note:'Gantry Y-Mitte. Span: Vorder-Idler zu Gantry-Umlenkrolle. Gates LL-2GT 12mm.',source:'community / MirageC Discord'}
   ]},
   {id:'voron_v2_4',name:'Voron V2.4',type:'corexy',axes:[
@@ -571,8 +571,8 @@ async function init(){
   S.profiles=Store.lp();S.history=Store.lh();
   if(S.profiles.length===0){
     S.profiles=[
-      {id:'p1',name:'HevOrt -- A-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:285,targetHz:110},
-      {id:'p2',name:'HevOrt -- B-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:285,targetHz:110}
+      {id:'p1',name:'HevOrt -- A-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:150,targetHz:110},
+      {id:'p2',name:'HevOrt -- B-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:150,targetHz:110}
     ];
     Store.sp(S.profiles);
   }
@@ -825,7 +825,7 @@ function updateReadout(hz,conf){
   const he=document.getElementById('out-hz'),ne=document.getElementById('out-n');
   const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
   he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
-  ne.className='mval';ne.innerHTML=n.toFixed(1)+'<span class="u">N</span>';
+  ne.innerHTML=n.toFixed(1)+'<span style="font-size:10px;font-weight:400;margin-left:1px">N</span>';
   bar.style.width=(conf*100).toFixed(0)+'%';
   bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
   if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
