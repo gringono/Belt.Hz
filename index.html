@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.9</span>
+    <span class="logo-sub">BELT TENSION v2.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -657,12 +657,18 @@ async function startMic(silent=false){
   // Re-enumerate nach Mic-Start: Lightning/USB Geraete erscheinen jetzt (DJI Mic 2 Fix)
   await populateMics(true);
   AE.sf((fd,td,sr,fs)=>{
-    let ph=0,pc=0;
-    if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500){ph=r.frequency;pc=r.confidence;S.lastHz=ph;S.lastConf=pc;if(!S.measuring)updateReadout(ph,pc);}}
+    // Live-Anzeige: FFT-Peak für Readout (nicht YIN)
+    if(fd&&sr&&fs){
+      const bh=sr/fs,mn=Math.floor(25/bh),mx=Math.ceil(500/bh);
+      let bestBin=mn,bestVal=-Infinity;
+      for(let b=mn;b<=Math.min(mx,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
+      const peakHz=bestBin*bh;
+      if(bestVal>-60&&!S.measuring){S.lastHz=peakHz;S.lastConf=1;updateReadout(peakHz,1);}
+    }
     SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
     if(S.measuring&&msess){
-      const rmsVal=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
-      msess.collect(ph,pc,fd,sr,fs,rmsVal);
+      const rms=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
+      msess.feed(fd,rms,sr,fs);
     }
   });
   return true;
@@ -698,47 +704,74 @@ function startMProc(){
   document.getElementById('mread-inline').textContent='Warte auf Signal...';
   if(dots.length>0)dots[0].classList.add('pend');
 
-  const col=[];let cur=0,lt=0;
-  const T0=Date.now(),TO=12000;
+  const col=[];let cur=0;
+  const T0=Date.now(),TO=15000;
+  let locked=false;           // Sperrzeit nach Messung
+  let bgRms=null;             // rollender Hintergrundpegel
+  let onsetActive=false;      // Onset erkannt, warte auf stabiles Signal
+  let onsetTimer=null;
 
-  msess={collect(hz,conf,fd,sr,fs,rmsVal){
-    if(!hz||conf<0.6)return;          // Konfidenzschwelle
-
-    const now=Date.now();
-    if(now-lt<600)return;              // Cooldown gegen Doppelmessungen
-    if(now-T0>TO){if(col.length>0)fin();return;}
-    lt=now + 900; // +900ms extra Sperrzeit nach Messung (Nachklingen)
-    // Amplitude am Peak-Bin normalisieren (0..1)
-    let amp=0.7;
-    if(fd&&sr&&fs){const bh=sr/fs;const bin=Math.round(hz/bh);if(bin<fd.length)amp=Math.max(0,Math.min(1,(fd[bin]+90)/90));}
-    col.push({hz,amp});
-    // Peak-Hold in Farbe dieser Messung
-    SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-    // Dot abschliessen
-    if(cur<dots.length){
-      dots[cur].classList.remove('pend');
-      dots[cur].style.background=colors[cur];
-      dots[cur].style.borderColor=colors[cur];
-      dots[cur].style.boxShadow='0 0 8px '+colors[cur];
-      cur++;
+  function fftPeak(fd,sr,fs){
+    // FFT-Peak im Riemenbereich 25-500Hz, parabolische Interpolation
+    const bh=sr/fs,mn=Math.floor(25/bh),mx=Math.ceil(500/bh);
+    let bestBin=mn,bestVal=-Infinity;
+    for(let b=mn;b<=Math.min(mx,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
+    if(bestVal<-70)return null;  // zu leise, kein Signal
+    // Parabolische Interpolation für Genauigkeit
+    let hz=bestBin*bh;
+    if(bestBin>0&&bestBin<fd.length-1){
+      const a=fd[bestBin-1],b=fd[bestBin],c=fd[bestBin+1];
+      const dn=2*(2*b-c-a);
+      if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
     }
-    document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-    if(col.length>=reps)fin();
+    return {hz, amp:Math.max(0,Math.min(1,(bestVal+90)/90))};
+  }
+
+  msess={feed(fd,rms,sr,fs){
+    if(locked)return;
+    if(Date.now()-T0>TO){if(col.length>0)fin();else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';S.measuring=false;msess=null;resetMeasureBtn();setTimeout(()=>cancelM(),2000);}return;}
+
+    // Hintergrundpegel aufbauen (EMA, langsam)
+    if(bgRms===null)bgRms=rms;
+    else bgRms=bgRms*0.97+rms*0.03;
+
+    // Onset: RMS mindestens 4× über Hintergrund
+    const threshold=Math.max(bgRms*4, 0.002);
+    if(!onsetActive&&rms>threshold){
+      onsetActive=true;
+      document.getElementById('mread-inline').textContent='...';
+      // 80ms warten, dann FFT-Peak lesen (Signal hat sich stabilisiert)
+      onsetTimer=setTimeout(()=>{
+        if(!S.measuring)return;
+        const peak=fftPeak(fd,sr,fs);
+        if(!peak||peak.hz<25||peak.hz>500){onsetActive=false;return;}
+        col.push(peak);
+        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+        if(cur<dots.length){
+          dots[cur].classList.remove('pend');
+          dots[cur].style.background=colors[cur];
+          dots[cur].style.borderColor=colors[cur];
+          dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+          cur++;
+        }
+        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+        // Sperrzeit: 1500ms damit Nachklingen ignoriert wird
+        locked=true;
+        setTimeout(()=>{locked=false;onsetActive=false;bgRms=null;},1500);
+        if(col.length>=reps)fin();
+      },80);
+    }
   }};
 
   function fin(){
     S.measuring=false;msess=null;
-    if(col.length===0){document.getElementById('mread-inline').textContent='Kein Signal. Nochmal versuchen.';resetMeasureBtn();return;}
+    if(onsetTimer)clearTimeout(onsetTimer);
+    if(col.length===0){document.getElementById('mread-inline').textContent='Kein Signal.';resetMeasureBtn();return;}
     const s=[...col].sort((a,b)=>a.hz-b.hz);
-    showMR(s[Math.floor(s.length/2)].hz,S.lastConf);
+    showMR(s[Math.floor(s.length/2)].hz,1);
   }
-  setTimeout(()=>{
-    if(S.measuring){S.measuring=false;msess=null;
-      if(col.length>0){const s=[...col].sort((a,b)=>a.hz-b.hz);showMR(s[Math.floor(s.length/2)].hz,S.lastConf);}
-      else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';resetMeasureBtn();setTimeout(()=>cancelM(),2000);}
-    }
-  },TO+500);
+  setTimeout(()=>{if(S.measuring)fin();},TO+500);
 }
 
 function showMR(hz,conf){
