@@ -162,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v1.6-DEBUG</span>
+    <span class="logo-sub">BELT TENSION v1.7</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -663,7 +663,6 @@ async function startMic(silent=false){
     if(S.measuring&&msess){
       const rmsVal=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
       msess.collect(ph,pc,fd,sr,fs,rmsVal);
-      if(S.measuring&&msess){const dbg=document.getElementById("mread-inline");if(dbg)dbg.textContent="RMS:"+rmsVal.toFixed(4)+" CONF:"+pc.toFixed(2)+" Hz:"+ph.toFixed(1);}
     }
   });
   return true;
@@ -704,7 +703,7 @@ function startMProc(){
 
   msess={collect(hz,conf,fd,sr,fs,rmsVal){
     if(!hz||conf<0.6)return;          // Konfidenzschwelle
-    if((rmsVal||0)<0.004)return;       // RMS-Gate: nur echtes Signal
+
     const now=Date.now();
     if(now-lt<600)return;              // 600ms Cooldown gegen Doppelmessungen
     if(now-T0>TO){if(col.length>0)fin();return;}
