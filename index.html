@@ -75,7 +75,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 #measure-inline{background:var(--bg2);border-top:2px solid var(--green-dark);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;text-align:center;display:none}
 .mi-anzupfen{font-size:18px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:6px}
 .mi-read{font-size:11px;color:var(--green-mid);min-height:18px;margin-bottom:8px;letter-spacing:.5px}
-.mi-hz-big{font-size:40px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
+.mi-result-lbl{font-size:10px;letter-spacing:3px;color:var(--green-dark);margin-bottom:4px}.mi-hz-big{font-size:52px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1;text-shadow:0 0 20px rgba(0,255,65,.5)}
 .mi-conf{font-size:9px;color:var(--green-dark);margin-bottom:8px}
 .mi-axis-lbl{font-size:9px;letter-spacing:1px;color:#7de09a;margin-bottom:4px}
 .mprog{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v5.0</span>
+    <span class="logo-sub">BELT TENSION v5.2</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -222,6 +222,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
         <div class="mi-read" id="mread-inline">Warte auf Signal...</div>
       </div>
       <div id="mi-done" style="display:none">
+        <div class="mi-result-lbl">ERGEBNIS</div>
         <div class="mi-hz-big" id="mi-hz">---</div>
         <div class="mi-conf" id="mi-conf"></div>
         <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
@@ -422,7 +423,7 @@ function mpm(buf,sr){
 // Fast FFT-based fundamental detection — used for live display + voting confirmation
 function hps(fd,sr,fs,harmonics=4){
   const bh=sr/fs;
-  const minBin=Math.floor(55/bh),maxBin=Math.ceil(300/bh);
+  const minBin=Math.floor(50/bh),maxBin=Math.ceil(200/bh);
   const mag=new Float32Array(fd.length);
   for(let i=0;i<fd.length;i++)mag[i]=Math.pow(10,fd[i]/20);
   const result=new Float32Array(maxBin+1);
@@ -446,7 +447,7 @@ function hps(fd,sr,fs,harmonics=4){
 // Simpler and more reliable than HPS for transient signals.
 function fftPeak(fd,sr,fs){
   const bh=sr/fs;
-  const minBin=Math.floor(55/bh),maxBin=Math.ceil(300/bh);
+  const minBin=Math.floor(50/bh),maxBin=Math.ceil(200/bh);
   let bestBin=minBin,bestVal=-Infinity;
   for(let b=minBin;b<=Math.min(maxBin,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
   if(bestVal<-72)return null; // too quiet — no real signal
@@ -632,7 +633,7 @@ function beginMeasurement(){
   document.getElementById('measure-inline').style.display='block';
   document.getElementById('btn-measure').disabled=true;
   document.getElementById('btn-measure').textContent='LAEUFT...';
-  document.getElementById('readout').style.opacity='0.2';document.getElementById('readout').style.pointerEvents='none';
+  document.getElementById('readout').style.display='none';
   startMProc();
 }
 
@@ -658,60 +659,75 @@ function startMProc(){
       else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}
       S.measuring=false;msess=null;return;
     }
-    // Background calibration ~300ms
     if(bgRms===null){bgRms=rms;bgCount=0;}
     bgRms=bgRms*0.992+rms*0.008;bgCount++;
     if(bgCount<15)return;
-    // Lockout
     if(locked){
       bgRms=bgRms*0.997+rms*0.003;
       if(now<lockUntil)return;
       if(rms>bgRms*1.8)return;
       locked=false;
     }
-    // Update background when quiet
     if(rms<bgRms*1.3)bgRms=bgRms*0.996+rms*0.004;
-    // Onset: transient spike — works with printer/fan noise
     if(rms<bgRms*2.0||rms<0.0008)return;
     if(!latestFdb)return;
-    // Lock immediately to prevent double-trigger
     locked=true;lockUntil=now+2000;
-    // Wait 60ms for attack transient to settle — fundamental emerges after attack
-    setTimeout(()=>{
-      if(!S.measuring)return;
-      const readings=[];
-      const t0=Date.now();
-      const iv=setInterval(()=>{
-        if(!S.measuring){clearInterval(iv);return;}
-        if(latestFdb){
-          const p=fftPeak(latestFdb,latestSr,latestFs);
-          if(p)readings.push(p);
+
+    // Collect 10 FFT frames over 200ms, pick most frequent peak bin
+    // Fundamental outlasts transient harmonics → wins the vote
+    const FRAMES=10,DURATION=200,FMIN=50,FMAX=200;
+    const votes={};  // bin → count
+    const t0=Date.now();
+    const iv=setInterval(()=>{
+      if(!S.measuring){clearInterval(iv);return;}
+      if(latestFdb){
+        const bh=latestSr/latestFs;
+        const minB=Math.floor(FMIN/bh),maxB=Math.ceil(FMAX/bh);
+        let bestBin=minB,bestVal=-Infinity;
+        for(let b=minB;b<=Math.min(maxB,latestFdb.length-1);b++){
+          if(latestFdb[b]>bestVal){bestVal=latestFdb[b];bestBin=b;}
         }
-        if(readings.length>=4||Date.now()-t0>100){
-          clearInterval(iv);
-          const valid=readings.filter(h=>h>55&&h<300);
-          if(!valid.length)return;
-          valid.sort((a,b)=>a-b);
-          const hz=valid[Math.floor(valid.length/2)];
-          let amp=0.65;
-          const bh=latestSr/latestFs;const bin=Math.round(hz/bh);
-          if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
-          col.push({hz,amp});
-          SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-          if(cur<dots.length){
-            dots[cur].classList.remove('pend');
-            dots[cur].style.background=colors[cur];
-            dots[cur].style.borderColor=colors[cur];
-            dots[cur].style.boxShadow='0 0 8px '+colors[cur];
-            cur++;
-          }
-          document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-          if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-          S.lastHz=hz;
-          if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
+        if(bestVal>-72){
+          const key=bestBin;
+          votes[key]=(votes[key]||0)+1;
         }
-      },25);
-    },60);
+      }
+      const elapsed=Date.now()-t0;
+      const framesDone=Object.values(votes).reduce((s,v)=>s+v,0);
+      if(framesDone>=FRAMES||elapsed>DURATION){
+        clearInterval(iv);
+        // Find most-voted bin
+        let bestBin=-1,bestCount=0;
+        for(const [bin,cnt] of Object.entries(votes)){
+          if(cnt>bestCount){bestCount=cnt;bestBin=parseInt(bin);}
+        }
+        if(bestBin<0)return;
+        const bh=latestSr/latestFs;
+        // Parabolic interpolation
+        let hz=bestBin*bh;
+        if(bestBin>0&&bestBin<latestFdb.length-1){
+          const a=latestFdb[bestBin-1],b=latestFdb[bestBin],c=latestFdb[bestBin+1];
+          const dn=2*(2*b-c-a);if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
+        }
+        hz=Math.max(FMIN,Math.min(FMAX,hz));
+        let amp=0.65;
+        const bin2=Math.round(hz/bh);
+        if(bin2<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin2]+90)/90));
+        col.push({hz,amp});
+        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+        if(cur<dots.length){
+          dots[cur].classList.remove('pend');
+          dots[cur].style.background=colors[cur];
+          dots[cur].style.borderColor=colors[cur];
+          dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+          cur++;
+        }
+        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+        S.lastHz=hz;
+        if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
+      }
+    },20);
   }};
 
   setTimeout(()=>{
@@ -725,7 +741,7 @@ function startMProc(){
 
 function finalize(col,colors){
   S.measuring=false;msess=null;
-  document.getElementById('readout').style.opacity='1';document.getElementById('readout').style.pointerEvents='';
+  document.getElementById('readout').style.display='';
   SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
   const sorted=[...col].sort((a,b)=>a.hz-b.hz);
   showMR(sorted[Math.floor(sorted.length/2)].hz);
@@ -747,7 +763,7 @@ function cancelM(){
   S.measuring=false;msess=null;SP.setPeaks([]);
   document.getElementById('measure-inline').style.display='none';
   document.getElementById('belt-picker').style.display='none';
-  document.getElementById('readout').style.opacity='1';document.getElementById('readout').style.pointerEvents='';
+  document.getElementById('readout').style.display='';
   resetMBtn();
 }
 
