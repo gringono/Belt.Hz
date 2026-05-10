@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v4.0</span>
+    <span class="logo-sub">BELT TENSION v4.1</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -440,25 +440,23 @@ function hps(fd,sr,fs,harmonics=4){
 }
 
 // ── VOTING: MPM + HPS ────────────────────────────────────────────────────────
-// MPM is primary — designed to find fundamental, avoids subharmonics
-// HPS confirms. If they disagree by more than a harmonic ratio → invalid reading
 function vote(td,fd,sr,fs){
   const mR=mpm(td,sr);
-  if(!mR||mR.clarity<0.25)return{hz:0,valid:false};
+  if(!mR||mR.clarity<0.45)return{hz:0,valid:false};
   const mHz=mR.frequency;
   const hHz=hps(fd,sr,fs);
-
-  // Direct agreement within 12%
   if(Math.abs(mHz-hHz)<mHz*0.12)return{hz:(mHz+hHz)/2,valid:true};
-
-  // Harmonic relationship: MPM is designed for fundamental, always trust MPM
   for(const f of[2,3]){
-    if(Math.abs(mHz*f-hHz)<hHz*0.12)return{hz:mHz,valid:true}; // HPS found harmonic
-    if(Math.abs(hHz*f-mHz)<mHz*0.12)return{hz:mHz,valid:true}; // MPM=fundamental, HPS=subharmonic (rare)
+    if(Math.abs(mHz*f-hHz)<hHz*0.12)return{hz:mHz,valid:true};
+    if(Math.abs(hHz*f-mHz)<mHz*0.12)return{hz:mHz,valid:true};
   }
-
-  // Complete disagreement → invalid
   return{hz:0,valid:false};
+}
+
+// MPM clarity threshold raised to 0.45 — prevents noise from registering
+function mpmClarityOk(buf,sr){
+  const r=mpm(buf,sr);
+  return r&&r.clarity>=0.45?r:null;
 }
 
 // Measure colors
@@ -625,62 +623,79 @@ function startMProc(){
   if(dots[0])dots[0].classList.add('pend');
 
   const col=[];let cur=0;
-  const T0=Date.now(),TO=18000;
-  let bgRms=0.001; // low start — stiff belts have small amplitude
-  let locked=false,onsetActive=false;
+  const T0=Date.now(),TO=20000;
+
+  // Calibrate background for 600ms before detecting onset
+  let bgRms=null,bgCount=0;
+  let locked=false,lockUntil=0;
 
   msess={feed(td,rms,sr){
     const now=Date.now();
     if(now-T0>TO){
       if(col.length>0)finalize(col,colors);
-      else{document.getElementById('mread-inline').textContent='Timeout — kein Signal.';resetMBtn();setTimeout(()=>cancelM(),2000);}
+      else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}
       S.measuring=false;msess=null;return;
     }
-    if(!onsetActive&&!locked)bgRms=bgRms*0.993+rms*0.007;
-    if(locked||onsetActive)return;
-    // Lower threshold for stiff high-tension belts
-    if(rms<Math.max(bgRms*2.0,0.0008))return;
-    onsetActive=true;
-    document.getElementById('mread-inline').textContent='...';
-    // Collect votes over 400ms after onset
-    const readings=[];const t0=Date.now();
-    const iv=setInterval(()=>{
-      if(!S.measuring){clearInterval(iv);return;}
-      if(latestFdb){
-        const v=vote(td,latestFdb,sr,latestFs);
-        if(v.valid)readings.push(v.hz);
-      }
-      if(Date.now()-t0>400){
-        clearInterval(iv);
-        if(!readings.length){
-          // No valid votes → discard, let user try again
-          onsetActive=false;
-          document.getElementById('mread-inline').textContent='Fehlmessung — nochmal zupfen';
-          setTimeout(()=>{if(S.measuring)document.getElementById('mread-inline').textContent='Warte auf Signal...';},1500);
-          return;
-        }
-        const sorted=[...readings].sort((a,b)=>a-b);
-        const hz=sorted[Math.floor(sorted.length/2)];
-        // Amplitude from FFT
-        let amp=0.65;
-        if(latestFdb&&latestSr&&latestFs){const bh=latestSr/latestFs;const bin=Math.round(hz/bh);if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));}
-        col.push({hz,amp});
-        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-        if(cur<dots.length){dots[cur].classList.remove('pend');dots[cur].style.background=colors[cur];dots[cur].style.borderColor=colors[cur];dots[cur].style.boxShadow='0 0 8px '+colors[cur];cur++;}
-        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-        S.lastHz=hz;
-        // Dynamic lockout: wait for signal to drop, max 2s
-        locked=true;
-        const lStart=Date.now();
-        const lIv=setInterval(()=>{
-          if(!S.measuring||Date.now()-lStart>2000){clearInterval(lIv);locked=false;onsetActive=false;}
-        },40);
-        if(col.length>=reps)setTimeout(()=>finalize(col,colors),200);
-      }
-    },20);
+
+    // Phase 1: build background estimate (~600ms)
+    if(bgRms===null||bgCount<30){
+      bgRms=bgRms===null?rms:bgRms*0.85+rms*0.15;
+      bgCount++;
+      return;
+    }
+
+    // Lockout: wait for min time AND for signal to decay
+    if(locked){
+      bgRms=bgRms*0.99+rms*0.01;
+      if(now<lockUntil)return;
+      if(rms>bgRms*2.5)return; // still ringing — keep waiting
+      locked=false;
+    }
+
+    // Update background slowly when quiet
+    if(rms<bgRms*1.8)bgRms=bgRms*0.997+rms*0.003;
+
+    // Onset: 4× background, hard floor 0.003
+    if(rms<Math.max(bgRms*4,0.003))return;
+
+    // IMMEDIATE measurement on fresh buffer — no 400ms window
+    if(!latestFdb)return;
+    const v=vote(td,latestFdb,sr,latestFs);
+    if(!v.valid){
+      locked=true;lockUntil=now+400; // brief pause on bad reading
+      return;
+    }
+
+    const hz=v.hz;
+    let amp=0.65;
+    const bh=latestSr/latestFs;const bin=Math.round(hz/bh);
+    if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
+    col.push({hz,amp});
+    SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+    if(cur<dots.length){
+      dots[cur].classList.remove('pend');
+      dots[cur].style.background=colors[cur];
+      dots[cur].style.borderColor=colors[cur];
+      dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+      cur++;
+    }
+    document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+    S.lastHz=hz;
+
+    // Lock 2.5s min — belt must fully decay before next reading
+    locked=true;lockUntil=now+2500;
+
+    if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
   }};
-  setTimeout(()=>{if(S.measuring&&msess){S.measuring=false;msess=null;if(col.length>0)finalize(col,colors);else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}}},TO+500);
+
+  setTimeout(()=>{
+    if(S.measuring&&msess){
+      S.measuring=false;msess=null;
+      if(col.length>0)finalize(col,colors);
+      else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}
+    }
+  },TO+500);
 }
 
 function finalize(col,colors){
