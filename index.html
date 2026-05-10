@@ -10,10 +10,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="BELT.Hz">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-/* BRIGHTER COLORS -- green-dark war #2a7a3a, kaum lesbar */
 :root{--bg:#060e07;--bg2:#0d1f10;--bg3:#040a05;--border:#1c3828;--border2:#315c42;--green:#00ff41;--green-dim:#00dd38;--green-mid:#5ecb78;--green-dark:#3fb358;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
 html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:var(--font);overflow:hidden}
 #app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto}
@@ -38,112 +36,52 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes pg{0%,100%{opacity:1;text-shadow:0 0 20px var(--green)}50%{opacity:.7;text-shadow:none}}
 #panel-messen{flex-direction:row}
-#sidebar{width:202px;min-width:202px;border-right:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+#sidebar{width:210px;min-width:210px;border-right:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
 #canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.clbl{font-size:10px;letter-spacing:2px;color:#7de09a;margin-bottom:3px;display:flex;align-items:center;gap:4px}
-.info-val{font-size:13px;color:var(--green);font-weight:700;letter-spacing:1px;padding:3px 0}
-.csel{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--green-dim);font-family:var(--font);font-size:11px;padding:5px;border-radius:3px}
+.clbl{font-size:10px;letter-spacing:2px;color:#7de09a;margin-bottom:4px}
+.info-val{font-size:13px;color:var(--green);font-weight:700;letter-spacing:1px;padding:2px 0}
+.csel{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--green-dim);font-family:var(--font);font-size:12px;padding:5px;border-radius:3px}
 .brow{display:flex;gap:3px}
 .bseg{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--green-dark);font-size:10px;padding:5px 2px;border-radius:3px;font-family:var(--font);cursor:pointer;text-align:center}
 .bseg.on{background:#001808;border-color:var(--green);color:var(--green)}
 .bseg:hover:not(.on){border-color:var(--green-dark);color:var(--green-mid)}
-.irow{display:flex;align-items:center;gap:6px}
-.inp{width:62px;background:var(--bg2);border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:13px;padding:4px 6px;border-radius:3px;text-align:right}
-.inp:focus{outline:none;border-color:var(--green-dim)}
-.unit{font-size:11px;color:var(--green-mid)}
-.muline{font-size:9px;color:var(--green-dark);margin-top:2px}
-.hbtn{font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);border-radius:3px;padding:1px 5px;font-family:var(--font);margin-left:auto;color:var(--green-dim)}
-.hbtn:hover{border-color:var(--green-dim);color:var(--green)}
-.rhpanel{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:6px 8px;font-size:9px;display:none}
+.rhpanel{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:8px;font-size:10px;display:none}
 .rhpanel.show{display:block}
-.rhtitle{color:var(--green);font-weight:700;font-size:10px;margin-bottom:4px}
-.rhrow{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;margin-bottom:2px}
+.rhtitle{color:var(--green);font-weight:700;font-size:11px;margin-bottom:6px}
+.rhrow{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;margin-bottom:3px}
 .rhaxis{color:var(--green-mid);font-weight:700}
 .rhhz{color:var(--green)}
-.rhnote{color:#7de09a;line-height:1.5;font-size:9px}
+.rhnote{color:#7de09a;line-height:1.6;font-size:9px}
 .rhsrc{color:#5a9a70;font-size:8px}
-#btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;letter-spacing:2px;padding:10px;border-radius:4px;cursor:pointer;width:100%}
+#btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:12px;letter-spacing:2px;padding:12px;border-radius:4px;cursor:pointer;width:100%}
 #btn-measure:hover:not(:disabled){background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
 #btn-measure:disabled{opacity:.45;cursor:default}
 #spectrum{width:100%;flex:0 0 175px;display:block;cursor:crosshair}
 .axstrip{display:flex;justify-content:space-between;padding:2px 8px;background:var(--bg3);font-size:9px;color:var(--border2);border-bottom:1px solid var(--border);flex-shrink:0}
 #readout{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
-.mlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid)}
-.mval{font-size:24px;font-weight:700;color:var(--green);line-height:1.15;white-space:nowrap}
+.mlbl{font-size:10px;letter-spacing:2px;color:#7de09a}
+.mval{font-size:28px;font-weight:700;color:var(--green);line-height:1.1;white-space:nowrap}
 .mval.warn{color:var(--warn)}.mval.dim{color:var(--border2)}
-.mval .u{font-size:11px;font-weight:400;margin-left:1px}
-.msub{font-size:9px;letter-spacing:1px}
+.mval .u{font-size:12px;font-weight:400;margin-left:1px}
+.msub{font-size:10px;letter-spacing:1px}
 .msub.ok{color:var(--green-dark)}.msub.warn{color:var(--warn)}.msub.err{color:var(--err)}
-.cbar-w{height:3px;background:var(--border);border-radius:2px;margin-top:2px}
+.cbar-w{height:3px;background:var(--border);border-radius:2px;margin-top:3px}
 .cbar{height:100%;border-radius:2px;background:var(--green);transition:width .3s}
-
-/* INLINE MEASURE PANEL */
+#belt-picker{background:var(--bg2);border-top:2px solid var(--border2);padding:10px 14px;flex-shrink:0;display:none}
+.bp-title{font-size:10px;letter-spacing:2px;color:#7de09a;margin-bottom:8px}
+.bp-btns{display:flex;flex-wrap:wrap;gap:6px}
+.bp-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--green-mid);font-family:var(--font);font-size:11px;padding:8px 14px;border-radius:3px;cursor:pointer;flex:1;min-width:80px;text-align:center}
+.bp-btn:hover{border-color:var(--green);color:var(--green)}
 #measure-inline{background:var(--bg2);border-top:2px solid var(--green-dark);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;text-align:center;display:none}
 .mi-anzupfen{font-size:18px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:6px}
 .mi-read{font-size:11px;color:var(--green-mid);min-height:18px;margin-bottom:8px;letter-spacing:.5px}
-.mi-hz-big{font-size:36px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
+.mi-hz-big{font-size:40px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
 .mi-conf{font-size:9px;color:var(--green-dark);margin-bottom:8px}
-.mi-axis-lbl{font-size:9px;letter-spacing:1px;color:var(--green-mid);margin-bottom:4px}
-
-#bottom-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.cmpbox{margin:6px 10px 0;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;flex-shrink:0}
-.cmplbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
-.cmprow{display:flex;gap:10px;align-items:center;font-size:11px;flex-wrap:wrap}
-.cval{color:var(--green);font-weight:700}.csep{color:var(--border2)}.cwarn{color:var(--warn)}
-.histbox{margin:6px 10px 8px;flex:1;overflow-y:auto}
-.histlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
-.histrow{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--green-dim);gap:6px}
-.hn{color:var(--green-mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hh{color:var(--green);white-space:nowrap}.hnw{color:var(--green-dark);white-space:nowrap}.ht{color:var(--border2);white-space:nowrap}
-#panel-profil{flex-direction:column;overflow-y:auto;padding:12px}
-.pclist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.pcard:hover{border-color:var(--green-dark)}.pcard.act{border-color:var(--green)}
-.pcn{font-size:12px;color:var(--green);font-weight:700}
-.pcs{font-size:9px;color:var(--green-mid);margin-top:2px}
-.pcact{display:flex;gap:6px;flex-shrink:0}
-.bsm{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-size:10px;padding:3px 8px;border-radius:3px;font-family:var(--font);cursor:pointer}
-.bsm:hover{border-color:var(--green-dim);color:var(--green)}.bsm.del:hover{border-color:var(--err);color:var(--err)}
-.pform{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:14px}
-.ftitle{font-size:10px;letter-spacing:2px;color:var(--green);margin-bottom:12px}
-.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.ff{display:flex;flex-direction:column;gap:4px}
-.ff label{font-size:9px;letter-spacing:1px;color:var(--green-mid)}
-.ff input,.ff select{background:var(--bg3);border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:12px;padding:5px 8px;border-radius:3px;width:100%}
-.ff input:focus,.ff select:focus{outline:none;border-color:var(--green-dim)}
-.fdiv{font-size:9px;letter-spacing:2px;color:var(--green-dark);border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px}
-.afnote{font-size:9px;color:var(--green-dark);margin-top:3px}
-.bsave{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer}
-.bsave:hover{background:#002a10}
-.bcancel{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer;margin-left:8px}
-#panel-referenz{flex-direction:column;overflow-y:auto;padding:12px}
-.refnote{font-size:9px;color:var(--green-dark);margin-bottom:10px;line-height:1.6;border-left:2px solid var(--border2);padding-left:8px}
-.rpcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden}
-.rphead{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.rphead:hover{background:var(--bg3)}
-.rpname{font-size:12px;color:var(--green);font-weight:700}
-.rptype{font-size:8px;letter-spacing:2px;color:var(--green-dark);border:1px solid var(--border);padding:1px 5px;border-radius:2px;margin-left:8px}
-.rpaxes{display:none;padding:4px 12px 10px;border-top:1px solid var(--border)}
-.rpaxes.open{display:block}
-.rparow{display:grid;grid-template-columns:80px 140px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
-.rparow:last-child{border-bottom:none}
-.rpaname{color:var(--green-mid);font-weight:700}
-.rpahz{color:var(--green);font-weight:700}
-.rpanote{color:var(--green-dark);font-size:9px;line-height:1.5}
-.rpasrc{color:var(--border2);font-size:8px}
-.usebtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:2px;cursor:pointer;white-space:nowrap;align-self:center}
-.usebtn:hover{border-color:var(--green-dim);color:var(--green)}
-.overlay{position:fixed;inset:0;background:rgba(3,8,4,.95);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
-.overlay.show{display:flex}
-.ovbox{background:var(--bg2);border:1px solid var(--green-dark);border-radius:6px;padding:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
-.ovhead{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.ovc{font-size:12px;cursor:pointer;color:var(--green-dim);border:1px solid var(--border);background:var(--bg3);border-radius:3px;padding:1px 7px;font-family:var(--font)}
-.ovc:hover{border-color:var(--green-dim);color:var(--green)}
-/* dot progress */
+.mi-axis-lbl{font-size:9px;letter-spacing:1px;color:#7de09a;margin-bottom:4px}
 .mprog{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
 .mpdot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border2);background:var(--bg3);transition:background .2s,box-shadow .2s}
-.mpdot.pend{border-color:var(--warn) !important;animation:blink .5s infinite}
-.axselw{display:flex;gap:8px;justify-content:center;margin:8px 0 6px}
+.mpdot.pend{border-color:var(--warn)!important;animation:blink .5s infinite}
+.axselw{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0 6px}
 .axbtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;padding:5px 12px;border-radius:3px;cursor:pointer}
 .axbtn.on{background:#001808;border-color:var(--green);color:var(--green)}
 .mbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
@@ -151,10 +89,69 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .bacc:hover{background:#002a10}
 .bret{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 14px;border-radius:3px;cursor:pointer}
 .bret:hover{border-color:var(--green-dark);color:var(--green-mid)}
-.ovtxt{font-size:10px;color:var(--green-mid);line-height:1.7;margin-top:8px}
-.ovtxt b{color:var(--green)}
+#bottom-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.cmpbox{margin:6px 10px 0;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;flex-shrink:0}
+.cmplbl{font-size:9px;letter-spacing:2px;color:#7de09a;margin-bottom:4px}
+.cmprow{display:flex;gap:10px;align-items:center;font-size:12px;flex-wrap:wrap}
+.cval{color:var(--green);font-weight:700}.csep{color:var(--border2)}.cwarn{color:var(--warn)}
+.histbox{margin:6px 10px 8px;flex:1;overflow-y:auto}
+.histlbl{font-size:9px;letter-spacing:2px;color:#7de09a;margin-bottom:4px}
+.histrow{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--green-dim);gap:6px}
+.hn{color:var(--green-mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hh{color:var(--green);white-space:nowrap}.ht{color:var(--border2);white-space:nowrap}
+#panel-profil{flex-direction:column;overflow-y:auto;padding:12px}
+.pclist{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;cursor:pointer}
+.pcard:hover{border-color:var(--green-dark)}.pcard.act{border-color:var(--green)}
+.pcn{font-size:13px;color:var(--green);font-weight:700}
+.pcs{font-size:10px;color:var(--green-mid);margin-top:3px;line-height:1.6}
+.pcact{display:flex;gap:6px;flex-shrink:0}
+.bsm{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-size:10px;padding:3px 8px;border-radius:3px;font-family:var(--font);cursor:pointer}
+.bsm:hover{border-color:var(--green-dim);color:var(--green)}.bsm.del:hover{border-color:var(--err);color:var(--err)}
+.pform{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:14px}
+.ftitle{font-size:10px;letter-spacing:2px;color:var(--green);margin-bottom:12px}
+.fdiv{font-size:9px;letter-spacing:2px;color:var(--green-dark);border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px;margin-top:4px}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff label{font-size:9px;letter-spacing:1px;color:#7de09a}
+.ff input,.ff select{background:var(--bg3);border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:12px;padding:5px 8px;border-radius:3px;width:100%}
+.ff input:focus,.ff select:focus{outline:none;border-color:var(--green-dim)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.belt-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.belt-item{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.belt-item-info{flex:1;font-size:11px;color:var(--green-mid)}
+.belt-item-hz{color:var(--green);font-weight:700}
+.belt-add-row{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px}
+.belt-add-row .ff{flex:1;min-width:80px}
+.bsave{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer}
+.bsave:hover{background:#002a10}
+.bcancel{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer;margin-left:8px}
+#panel-referenz{flex-direction:column;overflow-y:auto;padding:12px}
+.refnote{font-size:10px;color:var(--green-dark);margin-bottom:10px;line-height:1.6;border-left:2px solid var(--border2);padding-left:8px}
+.rpcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden}
+.rphead{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.rphead:hover{background:var(--bg3)}
+.rpname{font-size:13px;color:var(--green);font-weight:700}
+.rptype{font-size:8px;letter-spacing:2px;color:var(--green-dark);border:1px solid var(--border);padding:1px 5px;border-radius:2px;margin-left:8px}
+.rpaxes{display:none;padding:4px 12px 10px;border-top:1px solid var(--border)}
+.rpaxes.open{display:block}
+.rparow{display:grid;grid-template-columns:100px 80px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.rparow:last-child{border-bottom:none}
+.rpaname{color:var(--green-mid);font-weight:700}
+.rpahz{color:var(--green);font-weight:700}
+.rpanote{color:#7de09a;font-size:9px;line-height:1.5}
+.rpasrc{color:#5a9a70;font-size:8px}
+.usebtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:2px;cursor:pointer;white-space:nowrap;align-self:center}
+.usebtn:hover{border-color:var(--green-dim);color:var(--green)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-@media(max-width:640px){#panel-messen{flex-direction:column}#sidebar{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);max-height:44vh;overflow-y:auto;flex-shrink:0}#canvas-area{flex:1;min-height:120px}#sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}#btn-measure{margin-top:4px;flex:0 0 100%}.logo-by{display:none}}
+@media(max-width:640px){
+  #panel-messen{flex-direction:column}
+  #sidebar{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);max-height:42vh;overflow-y:auto;flex-shrink:0}
+  #sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}
+  #btn-measure{margin-top:4px;flex:0 0 100%}
+  #canvas-area{flex:1;min-height:120px}
+  .logo-by{display:none}
+  .rparow{grid-template-columns:80px 70px 1fr auto;font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -162,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.7</span>
+    <span class="logo-sub">BELT TENSION v3.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -179,29 +176,16 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 </div>
 <div id="main">
 
-<!-- MESSEN -->
 <div class="tpanel active" id="panel-messen">
   <div id="sidebar">
     <div>
-      <div class="clbl">PROFIL</div>
+      <div class="clbl">DRUCKER-PROFIL</div>
       <select class="csel" id="profil-sel"></select>
     </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <div>
-        <div class="clbl">RIEMENBREITE</div>
-        <div class="info-val" id="bwidth-display">12 mm</div>
-      </div>
-      <div>
-        <div class="clbl">RIEMENTYP</div>
-        <div class="info-val" id="btype-display">Gates LL-2GT</div>
-      </div>
-    </div>
     <div>
-      <div class="clbl">ZIEL-FREQUENZ <span style="color:var(--green-dark)">(opt.)</span></div>
-      <div class="irow">
-        <input class="inp" id="inp-target" type="number" placeholder="---" min="20" max="500">
-        <span class="unit">Hz</span>
-      </div>
+      <div class="clbl">AKTIVER RIEMEN</div>
+      <div class="info-val" id="belt-active-name">---</div>
+      <div style="font-size:11px;color:var(--green-dark);margin-top:2px" id="belt-active-info"></div>
     </div>
     <div>
       <div class="clbl">WIEDERHOLUNGEN</div>
@@ -217,32 +201,33 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     </div>
     <button id="btn-measure">MESSEN</button>
   </div>
+
   <div id="canvas-area">
     <canvas id="spectrum"></canvas>
-    <div class="axstrip">
-      <span>30</span><span>60</span><span>100</span><span>150</span><span>200</span><span>300</span><span>420 Hz</span>
-    </div>
+    <div class="axstrip"><span>30</span><span>60</span><span>100</span><span>150</span><span>200</span><span>300</span><span>420 Hz</span></div>
     <div id="readout">
       <div><div class="mlbl">FREQUENZ</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
       <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
     </div>
 
-    <!-- INLINE MEASURE PANEL (ersetzt den Overlay) -->
+    <div id="belt-picker">
+      <div class="bp-title">WELCHER RIEMEN?</div>
+      <div class="bp-btns" id="bp-btns"></div>
+    </div>
+
     <div id="measure-inline">
-      <!-- Phase 1: Messen läuft -->
       <div id="mi-progress">
         <div class="mi-anzupfen">ANZUPFEN!</div>
         <div class="mprog" id="mprog-inline"></div>
         <div class="mi-read" id="mread-inline">Warte auf Signal...</div>
       </div>
-      <!-- Phase 2: Ergebnis -->
       <div id="mi-done" style="display:none">
         <div class="mi-hz-big" id="mi-hz">---</div>
         <div class="mi-conf" id="mi-conf"></div>
         <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
         <div class="axselw" id="axbtns">
-          <button class="axbtn on" data-axis="A">A-Belt</button>
-          <button class="axbtn" data-axis="B">B-Belt</button>
+          <button class="axbtn on" data-axis="A">A</button>
+          <button class="axbtn" data-axis="B">B</button>
           <button class="axbtn" data-axis="X">X</button>
           <button class="axbtn" data-axis="Y">Y</button>
           <button class="axbtn" data-axis="Z">Z</button>
@@ -253,7 +238,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
           <button class="bret" id="btn-cancel-done">ABBRECHEN</button>
         </div>
       </div>
-      <!-- Immer sichtbar während Messung aktiv -->
       <button class="bret" id="btn-mcancel-inline" style="margin-top:6px">ABBRECHEN</button>
     </div>
 
@@ -276,40 +260,28 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
   </div>
 </div>
 
-<!-- PROFIL -->
 <div class="tpanel" id="panel-profil">
-  <div style="width:100%">
+  <div style="width:100%;padding:12px;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:9px;letter-spacing:2px;color:var(--green-mid)">GESPEICHERTE PROFILE</span>
+      <span style="font-size:10px;letter-spacing:2px;color:#7de09a">DRUCKER-PROFILE</span>
       <button class="bsm" id="btn-new-profil">+ NEU</button>
     </div>
     <div class="pclist" id="pclist"></div>
     <div class="pform" id="pform" style="display:none">
       <div class="ftitle" id="ftitle">NEUES PROFIL</div>
-      <div class="fdiv">PROFIL-NAME</div>
       <div class="fgrid" style="grid-template-columns:1fr">
-        <div class="ff"><label>NAME DES PROFILS</label><input type="text" id="f-name" placeholder="z.B. HevOrt -- A-Belt"></div>
+        <div class="ff"><label>DRUCKER-NAME</label><input type="text" id="f-name" placeholder="z.B. Prusa Core One"></div>
       </div>
-      <div class="fdiv">DRUCKER AUS REFERENZ WAEHLEN</div>
-      <div class="fgrid">
-        <div class="ff">
-          <label>DRUCKER</label>
-          <select id="f-printer-ref"><option value="">-- Benutzerdefiniert --</option></select>
-          <span class="afnote" id="f-afnote"></span>
-        </div>
-        <div class="ff">
-          <label>ACHSE</label>
-          <select id="f-axis-sel"><option value="">-- manuell --</option></select>
-        </div>
+      <div class="fdiv">RIEMEN</div>
+      <div class="belt-list" id="belt-list"></div>
+      <div class="belt-add-row">
+        <div class="ff"><label>NAME</label><input type="text" id="f-belt-name" placeholder="Oberes Belt"></div>
+        <div class="ff"><label>ZIEL-Hz</label><input type="number" id="f-belt-hz" placeholder="110" min="20" max="500"></div>
+        <div class="ff"><label>TYP</label><select id="f-belt-type"><option value="gates">Gates LL-2GT</option><option value="gt2">GT2</option></select></div>
+        <div class="ff"><label>MM</label><select id="f-belt-width"><option value="6">6</option><option value="9">9</option><option value="12">12</option></select></div>
+        <button class="bsm" id="btn-add-belt" style="align-self:flex-end;padding:7px 10px">+ RIEMEN</button>
       </div>
-      <div class="fdiv">PARAMETER</div>
-      <div class="fgrid">
-        <div class="ff"><label>RIEMENTYP</label><select id="f-btype"><option value="gates">Gates LL-2GT</option><option value="gt2">GT2 Generic</option></select></div>
-        <div class="ff"><label>BREITE (mm)</label><select id="f-bwidth"><option value="6">6</option><option value="9">9</option><option value="12">12</option></select></div>
-        <div class="ff"><label>SPANLAENGE (mm)</label><input type="number" id="f-span" placeholder="285"></div>
-        <div class="ff"><label>ZIEL-FREQUENZ (Hz)</label><input type="number" id="f-target" placeholder="110"></div>
-      </div>
-      <div style="margin-top:6px">
+      <div style="margin-top:8px">
         <button class="bsave" id="btn-save-profil">SPEICHERN</button>
         <button class="bcancel" id="btn-cancel-profil">ABBRECHEN</button>
       </div>
@@ -317,86 +289,64 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
   </div>
 </div>
 
-<!-- REFERENZ -->
 <div class="tpanel" id="panel-referenz">
-  <div style="width:100%">
-    <div class="refnote">COMMUNITY-RICHTWERTE. Als Ausgangspunkt verwenden. Quellen: offizielle Docs und Community.</div>
+  <div style="width:100%;padding:12px;overflow-y:auto">
+    <div class="refnote">COMMUNITY-RICHTWERTE. Als Ausgangspunkt verwenden.</div>
     <div id="reflist"></div>
   </div>
 </div>
 
 </div>
 </div>
-
 <script>
 'use strict';
 const REFDB=[
   {id:'hevort',name:'HevOrt',type:'corexy',axes:[
-    {name:'A/B-Belt 12mm',targetHz:110,targetHzMax:140,spanMm:150,beltMm:12,
-     note:'Gantry Y-Mitte. Span: Vorder-Idler zu Gantry-Umlenkrolle. Gates LL-2GT 12mm.',source:'community / MirageC Discord'}
-  ]},
+    {name:'A/B-Belt 12mm',targetHz:110,targetHzMax:140,beltMm:12,note:'Gantry Y-Mitte. Gates LL-2GT 12mm.',source:'community / MirageC Discord'}]},
   {id:'voron_v2_4',name:'Voron V2.4',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:150,beltMm:6,
-     note:'Gantry 150mm von Vorder-Idler. Ziel 110-140 Hz.',source:'docs.vorondesign.com'}
-  ]},
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,beltMm:6,note:'Ziel 110-140 Hz.',source:'docs.vorondesign.com'}]},
   {id:'voron_trident',name:'Voron Trident',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:150,beltMm:6,
-     note:'Gantry 150mm von Z-Idler-Zentrum.',source:'docs.vorondesign.com'}
-  ]},
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,beltMm:6,note:'Gantry an Z-Idler-Zentrum.',source:'docs.vorondesign.com'}]},
   {id:'voron_v0',name:'Voron V0.2',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:110,targetHzMax:140,spanMm:null,beltMm:6,
-     note:'Gleiche Methode wie V2.4, kuerzere Spanne.',source:'docs.vorondesign.com'}
-  ]},
+    {name:'A/B-Belt',targetHz:110,targetHzMax:140,beltMm:6,note:'Gleiche Methode wie V2.4.',source:'docs.vorondesign.com'}]},
   {id:'vzbot_vz235',name:'VZBot Vz235',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,spanMm:150,beltMm:6,
-     note:'Span 150mm Vorder-Idler zu Gantry-Umlenkrolle.',source:'docs.vzbot.org'}
-  ]},
+    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,beltMm:6,note:'Ziel 130-160 Hz.',source:'docs.vzbot.org'}]},
   {id:'vzbot_vz330',name:'VZBot Vz330',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,spanMm:150,beltMm:6,
-     note:'Span 150mm Vorder-Idler zu Gantry-Umlenkrolle.',source:'docs.vzbot.org'}
-  ]},
+    {name:'A/B-Belt',targetHz:140,targetHzMin:130,targetHzMax:160,beltMm:6,note:'Ziel 130-160 Hz.',source:'docs.vzbot.org'}]},
   {id:'ratrig_vc4_400',name:'RatRig V-Core 4 (400mm)',type:'corexy',axes:[
-    {name:'CoreXY',targetHz:87,spanMm:null,beltMm:6,note:'Ziel 87 Hz +/-1 Hz. XY-Joiner zu Front-Tensioner.',source:'docs.ratrig.com'},
-    {name:'Hybrid Y',targetHz:84,spanMm:null,beltMm:6,note:'Ziel 84 Hz +/-1 Hz.',source:'docs.ratrig.com'}
-  ]},
+    {name:'CoreXY',targetHz:87,beltMm:6,note:'Ziel 87 Hz ±1 Hz.',source:'docs.ratrig.com'},
+    {name:'Hybrid Y',targetHz:84,beltMm:6,note:'Ziel 84 Hz ±1 Hz.',source:'docs.ratrig.com'}]},
   {id:'ratrig_vc4_500',name:'RatRig V-Core 4 (500mm)',type:'corexy',axes:[
-    {name:'CoreXY',targetHz:87,spanMm:285,beltMm:6,note:'Ziel 87 Hz. Span 285mm.',source:'docs.ratrig.com'},
-    {name:'Hybrid Y',targetHz:84,spanMm:295,beltMm:6,note:'Ziel 84 Hz. Span 295mm.',source:'docs.ratrig.com'}
-  ]},
+    {name:'CoreXY',targetHz:87,beltMm:6,note:'Ziel 87 Hz.',source:'docs.ratrig.com'},
+    {name:'Hybrid Y',targetHz:84,beltMm:6,note:'Ziel 84 Hz.',source:'docs.ratrig.com'}]},
   {id:'prusa_core_one',name:'Prusa Core One',type:'corexy',axes:[
-    {name:'Oberes Belt',targetHz:98,targetHzMin:90,targetHzMax:98,spanMm:null,beltMm:6,
-     note:'Ziel 98 Hz. Bereich 90-98 Hz. Max. 8 Hz Differenz zwischen oberem und unterem Belt.',source:'help.prusa3d.com (offiziell)'},
-    {name:'Unteres Belt',targetHz:92,spanMm:null,beltMm:6,
-     note:'Ziel 92 Hz.',source:'help.prusa3d.com (offiziell)'}
-  ]},
+    {name:'Oberes Belt',targetHz:98,beltMm:6,note:'Ziel 98 Hz.',source:'help.prusa3d.com (offiziell)'},
+    {name:'Unteres Belt',targetHz:92,beltMm:6,note:'Ziel 92 Hz.',source:'help.prusa3d.com (offiziell)'}]},
   {id:'lh_stinger',name:'LH Stinger',type:'cartesian',axes:[
-    {name:'X',targetHz:108,spanMm:null,beltMm:6,note:'Carriage ganz links.',source:'github.com/lhndo/LH-Stinger/wiki'},
-    {name:'Y',targetHz:118,spanMm:null,beltMm:6,note:'Carriage ganz hinten.',source:'github.com/lhndo/LH-Stinger/wiki'},
-    {name:'Z',targetHz:90,spanMm:null,beltMm:6,note:'Hinteren Riemenabschnitt.',source:'github.com/lhndo/LH-Stinger/wiki'}
-  ]},
+    {name:'X',targetHz:108,beltMm:6,note:'Carriage ganz links.',source:'github.com/lhndo/LH-Stinger/wiki'},
+    {name:'Y',targetHz:118,beltMm:6,note:'Carriage ganz hinten.',source:'github.com/lhndo/LH-Stinger/wiki'},
+    {name:'Z',targetHz:90,beltMm:6,note:'Hinteren Riemenabschnitt.',source:'github.com/lhndo/LH-Stinger/wiki'}]},
   {id:'prusa_xl',name:'Prusa XL',type:'corexy',axes:[
-    {name:'A/B-Belt',targetHz:80,targetHzMin:78,targetHzMax:85,spanMm:null,beltMm:6,
-     note:'Ziel ~80 Hz auf beiden Seiten. Bereich 78-85 Hz. Alignment-Check nach Einstellung zwingend.',source:'help.prusa3d.com + community'}
-  ]},
+    {name:'A/B-Belt',targetHz:80,targetHzMin:78,targetHzMax:85,beltMm:6,note:'Ziel ~80 Hz. Bereich 78-85 Hz.',source:'help.prusa3d.com + community'}]},
   {id:'prusa_mk4',name:'Prusa MK4 / MK3S+',type:'cartesian',axes:[
-    {name:'X',targetHz:null,spanMm:null,beltMm:6,note:'Prusa gibt offiz. Belt-Status-Werte (260-290), keine Hz. Hz-Werte per Spanlange berechnen.',source:'help.prusa3d.com (offiziell)'},
-    {name:'Y',targetHz:null,spanMm:null,beltMm:6,note:'Prusa gibt offiz. Belt-Status-Werte (260-290), keine Hz. Hz-Werte per Spanlange berechnen.',source:'help.prusa3d.com (offiziell)'}
-  ]},
+    {name:'X',targetHz:null,beltMm:6,note:'Prusa gibt Belt-Status-Werte (260-290), keine Hz.',source:'help.prusa3d.com'},
+    {name:'Y',targetHz:null,beltMm:6,note:'Prusa gibt Belt-Status-Werte (260-290), keine Hz.',source:'help.prusa3d.com'}]},
   {id:'ender3',name:'Creality Ender 3',type:'cartesian',axes:[
-    {name:'X',targetHz:94,spanMm:302,beltMm:6,note:'Carriage am Endanschlag. Span 302mm. Zielspannung: 6 lb / 26.7 N.',source:'benchtopmachineshop.blogspot.com'},
-    {name:'Y',targetHz:113,spanMm:253,beltMm:6,note:'Bett ganz nach vorne. Span 253mm. Zielspannung: 6 lb / 26.7 N.',source:'benchtopmachineshop.blogspot.com'}
-  ]}
+    {name:'X',targetHz:94,beltMm:6,note:'Carriage am Endanschlag.',source:'benchtopmachineshop.blogspot.com'},
+    {name:'Y',targetHz:113,beltMm:6,note:'Bett ganz nach vorne.',source:'benchtopmachineshop.blogspot.com'}]}
 ];
-const MU={gates:{6:0.00659,9:0.00989,12:0.01318},gt2:{6:0.00830,9:0.01245,12:0.01660}};
+
 const Store={
-  K:'belthz_p_v1',H:'belthz_h_v1',
+  K:'belthz_pv2',H:'belthz_h_v2',
   lp(){try{return JSON.parse(localStorage.getItem(this.K)||'[]')}catch{return[]}},
   sp(d){localStorage.setItem(this.K,JSON.stringify(d))},
   lh(){try{return JSON.parse(localStorage.getItem(this.H)||'[]')}catch{return[]}},
   sh(d){localStorage.setItem(this.H,JSON.stringify(d.slice(0,50)))}
 };
+
+// YIN pitch detection
 function yin(buf,sr){
-  const TH=0.12,MF=25,XF=500;
+  const TH=0.10,MF=25,XF=500;
   const tm=Math.max(2,Math.floor(sr/XF)),tx=Math.min(Math.floor(buf.length/2)-1,Math.ceil(sr/MF));
   if(tx<=tm)return null;
   const yb=new Float32Array(tx+1),hl=Math.floor(buf.length/2);
@@ -410,212 +360,161 @@ function yin(buf,sr){
   if(tau>1&&tau<tx){const a=yb[tau-1],b=yb[tau],c=yb[tau+1],dn=2*(2*b-c-a);if(Math.abs(dn)>1e-6)bt=tau+(c-a)/dn;}
   return{frequency:sr/bt,confidence:Math.max(0,Math.min(1,1-yb[tau]))};
 }
-function tens(hz,span,bt,bw){if(!hz||hz<=0)return 0;return Math.pow(2*(span/1000)*hz,2)*MU[bt][bw];}
 
-// Farben fuer Messungen -- dynamisch, N Farben gleichmaessig verteilt
-function measureColors(n){
-  // Farbpalette die gut auf dunkelgruenen Hintergrund lesbar ist
-  const base=['#00ffff','#ffff00','#ff8800','#ff44ff','#4488ff','#ff4444','#00ff88','#ffaa00','#88ff00','#ff88ff'];
-  return Array.from({length:n},(_,i)=>base[i%base.length]);
+// Anti-subharmonic: if result too low vs target, try doubling/tripling
+function yinFixed(buf,sr,targetHz){
+  const r=yin(buf,sr);
+  if(!r||r.frequency<10)return null;
+  let hz=r.frequency;
+  const floor=targetHz?targetHz*0.45:55;
+  if(hz<floor){
+    if(hz*2<=500&&hz*2>=floor)hz=hz*2;
+    else if(hz*3<=500&&hz*3>=floor)hz=hz*3;
+  }
+  return{frequency:hz,confidence:r.confidence};
 }
 
+// Measure colors
+function mColors(n){
+  const c=['#00ffff','#ffff00','#ff8800','#ff44ff','#4488ff','#ff4444','#00ff88','#ffaa00','#88ff00','#ff88ff'];
+  return Array.from({length:n},(_,i)=>c[i%c.length]);
+}
+
+// Audio engine
 const AE=(()=>{
-  let ctx,an,st,src,tdb,fdb,onF,raf,fc=0;
+  let ctx,an,st,src,tdb,fdb,onF,raf;
   async function start(did){
     stop();
     try{
-      // iOS Lightning: ideal statt exact, Fallback auf default
-      const constraints={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
-      if(did)constraints.audio.deviceId={ideal:did};
-      try{st=await navigator.mediaDevices.getUserMedia(constraints);}
-      catch(e1){
-        // Fallback: ohne deviceId
-        try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}
-        catch(e2){console.error('Mic fallback failed',e2);return false;}
-      };
+      const c={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}};
+      if(did)c.audio.deviceId={ideal:did};
+      try{st=await navigator.mediaDevices.getUserMedia(c);}
+      catch{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}
       ctx=new(window.AudioContext||window.webkitAudioContext)();
       if(ctx.state==='suspended')await ctx.resume();
-      an=ctx.createAnalyser();an.fftSize=4096;an.smoothingTimeConstant=0.65;
+      an=ctx.createAnalyser();
+      an.fftSize=8192; // larger window = more YIN periods, better accuracy
+      an.smoothingTimeConstant=0.6;
       src=ctx.createMediaStreamSource(st);src.connect(an);
       tdb=new Float32Array(an.fftSize);fdb=new Float32Array(an.frequencyBinCount);
       loop();return true;
-    }catch(e){console.error(e);return false;}
+    }catch(e){console.error('Mic error:',e);return false;}
   }
-  function loop(){raf=requestAnimationFrame(loop);if(!an)return;fc++;an.getFloatFrequencyData(fdb);if(fc%4===0)an.getFloatTimeDomainData(tdb);if(onF)onF(fdb,tdb,ctx.sampleRate,an.fftSize);}
-  function stop(){if(raf)cancelAnimationFrame(raf);if(src){src.disconnect();src=null;}if(st){st.getTracks().forEach(t=>t.stop());st=null;}if(ctx){ctx.close().catch(()=>{});ctx=null;}an=null;fc=0;}
-  async function enumD(){try{const d=await navigator.mediaDevices.enumerateDevices();return d.filter(x=>x.kind==='audioinput');}catch{return[];}}
+  function loop(){
+    raf=requestAnimationFrame(loop);if(!an)return;
+    an.getFloatFrequencyData(fdb);an.getFloatTimeDomainData(tdb);
+    if(onF)onF(fdb,tdb,ctx.sampleRate,an.fftSize);
+  }
+  function stop(){if(raf)cancelAnimationFrame(raf);if(src){src.disconnect();src=null;}if(st){st.getTracks().forEach(t=>t.stop());st=null;}if(ctx){ctx.close().catch(()=>{});ctx=null;}an=null;}
+  async function enumD(){try{return(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='audioinput');}catch{return[];}}
   return{start,stop,enumD,sf(fn){onF=fn;},run(){return!!ctx;}};
 })();
 
+// Spectrum display
 const SP=(()=>{
-  let cv,cx,W,H,dpr;
-  let peaks=[];  // [{hz, color}, ...]  -- Peak-Hold pro Messung
-  const MN=30,MX=420;
-  const fx=h=>(h-MN)/(MX-MN)*W;
-  function init(c){
-    cv=c;cx=cv.getContext('2d');resize();
-    window.addEventListener('resize',resize);
-    idle();
-    // Tap auf Canvas startet Mic (iOS user gesture)
-    cv.addEventListener('click',()=>{if(!S.micOn)startMic();});
-  }
+  let cv,cx,W,H,dpr,peaks=[];
+  const MN=30,MX=420,fx=h=>(h-MN)/(MX-MN)*W;
+  function init(c){cv=c;cx=c.getContext('2d');resize();window.addEventListener('resize',resize);idle();cv.addEventListener('click',()=>{if(!S.micOn)startMic();});}
   function resize(){dpr=window.devicePixelRatio||1;cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr;W=cv.clientWidth;H=cv.clientHeight;if(cx)cx.setTransform(dpr,0,0,dpr,0,0);}
-  function setPeaks(arr){peaks=arr;}
-  function draw(fd,sr,fs,ph,pc,th){
+  function setPeaks(a){peaks=a;}
+  function draw(fd,sr,fs,ph,th){
     if(!cx)return;
     cx.fillStyle='#040a05';cx.fillRect(0,0,W,H);
     cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);
     cx.strokeStyle='#0d2010';cx.lineWidth=0.5;
     [50,60,80,100,150,200,300,400].forEach(h=>{const x=fx(h);if(x>0&&x<W){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}});
     if(th>0){const tx=fx(th);cx.strokeStyle='#1a5a2a';cx.lineWidth=1;cx.setLineDash([3,5]);cx.beginPath();cx.moveTo(tx,0);cx.lineTo(tx,H);cx.stroke();cx.setLineDash([]);cx.fillStyle='#1a5a2a';cx.font='8px monospace';cx.fillText(th+'Hz',tx+3,11);}
-    if(!fd){idle();return;}
+    if(!fd){return;}
     const bh=sr/fs,mn=Math.floor(MN/bh),mx=Math.ceil(MX/bh);
-    // Live-Spektrum (gruen)
     cx.save();cx.shadowBlur=14;cx.shadowColor='#00ff41';cx.strokeStyle='#00ff41';cx.lineWidth=1.5;cx.beginPath();let f1=true;
     for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
     cx.stroke();cx.restore();
     cx.save();cx.globalAlpha=0.10;cx.fillStyle='#00ff41';cx.beginPath();f1=true;
     for(let b=mn;b<=Math.min(mx,fd.length-1);b++){const x=fx(b*bh),n=Math.max(0,Math.min(1,(fd[b]+90)/90)),y=H-4-n*(H-14);f1?(cx.moveTo(x,y),f1=false):cx.lineTo(x,y);}
     cx.lineTo(fx(MX),H);cx.lineTo(fx(MN),H);cx.closePath();cx.fill();cx.restore();
-    // Peak-Hold Balken (horizontal, Equalizer-Stil, eine pro Messung)
-    peaks.forEach((pk,i)=>{
+    peaks.forEach(pk=>{
       if(!pk.hz||pk.hz<MN||pk.hz>MX)return;
-      const px=fx(pk.hz);
-      const py=H-4-(pk.amp||0.6)*(H-14);  // y = Amplitudenhöhe
-      const bw=28; // Balkenbreite px
-      cx.save();
-      cx.strokeStyle=pk.color;cx.lineWidth=2.5;cx.globalAlpha=0.95;
-      cx.shadowBlur=10;cx.shadowColor=pk.color;
-      // Horizontaler Balken
+      const px=fx(pk.hz),py=H-4-(pk.amp||0.6)*(H-14),bw=28;
+      cx.save();cx.strokeStyle=pk.color;cx.lineWidth=2.5;cx.globalAlpha=0.95;cx.shadowBlur=10;cx.shadowColor=pk.color;
       cx.beginPath();cx.moveTo(px-bw,py);cx.lineTo(px+bw,py);cx.stroke();
-      // Kleiner vertikaler Strich an der Mitte (zeigt genaue Hz-Position)
-      cx.lineWidth=1;cx.globalAlpha=0.4;
-      cx.beginPath();cx.moveTo(px,py);cx.lineTo(px,H-4);cx.stroke();
-      // Label
+      cx.lineWidth=1;cx.globalAlpha=0.3;cx.beginPath();cx.moveTo(px,py);cx.lineTo(px,H-4);cx.stroke();
       cx.font='bold 9px monospace';cx.fillStyle=pk.color;cx.globalAlpha=1;
-      const lbl=pk.hz.toFixed(1)+' Hz';
-      const lx=px+bw+4>W-60?px-bw-62:px+bw+4;
-      cx.fillText(lbl,lx,py+3);
+      cx.fillText(pk.hz.toFixed(1)+' Hz',px+bw+4>W-60?px-bw-62:px+bw+4,py+3);
       cx.restore();
     });
-    // Live-Frequenz Marker
-    if(ph>0&&pc>0.3){const px=fx(ph);cx.strokeStyle='rgba(0,255,65,.35)';cx.lineWidth=1;cx.setLineDash([2,4]);cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();cx.setLineDash([]);cx.save();cx.shadowBlur=6;cx.shadowColor='#00ff41';cx.fillStyle='#00ff41';cx.font='bold 10px monospace';cx.fillText('> '+ph.toFixed(1)+' Hz',px+4>W-78?px-80:px+4,H-6);cx.restore();}
+    if(ph>0){const px=fx(ph);cx.strokeStyle='rgba(0,255,65,.4)';cx.lineWidth=1;cx.setLineDash([2,4]);cx.beginPath();cx.moveTo(px,0);cx.lineTo(px,H);cx.stroke();cx.setLineDash([]);cx.save();cx.fillStyle='#00ff41';cx.font='bold 10px monospace';cx.fillText('> '+ph.toFixed(1)+' Hz',px+4>W-78?px-80:px+4,H-6);cx.restore();}
   }
-  function idle(){if(!cx)return;cx.fillStyle='#040a05';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);cx.strokeStyle='#0d2010';cx.lineWidth=0.5;[50,100,150,200,300].forEach(h=>{const x=fx(h);cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();});cx.fillStyle='#2a6a3a';cx.font='10px monospace';cx.textAlign='center';cx.fillText('TIPPEN oder MESSEN drücken -- Mikrofon starten',W/2,H/2);cx.textAlign='left';}
+  function idle(){if(!cx)return;cx.fillStyle='#040a05';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(0,0,0,0.12)';for(let y=0;y<H;y+=3)cx.fillRect(0,y,W,1);cx.fillStyle='#2a6a3a';cx.font='10px monospace';cx.textAlign='center';cx.fillText('Tippen zum Starten',W/2,H/2);cx.textAlign='left';}
   return{init,draw,idle,resize,setPeaks};
 })();
 
-const S={bt:'gates',bw:6,tgt:null,reps:3,pid:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,lastConf:0,micId:null};
-let msess=null;
+// State
+const S={tgt:null,reps:3,pid:null,activeBeltId:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,micId:null};
+let msess=null,pendingBelts=[];
+let latestFdb=null,latestSr=44100,latestFs=8192;
 
-async function init(){
-  S.profiles=Store.lp();S.history=Store.lh();
-  if(S.profiles.length===0){
-    S.profiles=[
-      {id:'p1',name:'HevOrt -- A-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:150,targetHz:110},
-      {id:'p2',name:'HevOrt -- B-Belt',printerId:'hevort',axis:'A/B-Belt 12mm',beltType:'gates',beltWidth:12,spanMm:150,targetHz:110}
-    ];
-    Store.sp(S.profiles);
+// Audio callback
+function onAudio(fd,td,sr,fs){
+  latestFdb=fd;latestSr=sr;latestFs=fs;
+  if(td&&!S.measuring){
+    const r=yinFixed(td,sr,S.tgt);
+    if(r&&r.frequency>25&&r.frequency<500&&r.confidence>0.5){S.lastHz=r.frequency;updateReadout(r.frequency);}
   }
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
-
-
-  setupSeg('reps-row',v=>{S.reps=parseInt(v);});
-  document.getElementById('inp-target').addEventListener('input',e=>{const v=parseFloat(e.target.value);S.tgt=isNaN(v)?null:v;});
-  document.getElementById('profil-sel').addEventListener('change',e=>loadProf(e.target.value));
-  document.getElementById('btn-measure').addEventListener('click',startMeasure);
-
-  // Inline measure panel buttons
-  document.getElementById('btn-mcancel-inline').addEventListener('click',cancelM);
-  document.getElementById('btn-cancel-done').addEventListener('click',cancelM);
-  document.getElementById('btn-accept').addEventListener('click',acceptM);
-  document.getElementById('btn-retry').addEventListener('click',()=>{
-    document.getElementById('mi-done').style.display='none';
-    document.getElementById('mi-progress').style.display='block';
-    startMProc();
-  });
-  document.querySelectorAll('.axbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.axbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
-  document.getElementById('btn-new-profil').addEventListener('click',()=>showPForm(null));
-  document.getElementById('btn-save-profil').addEventListener('click',saveProf);
-  document.getElementById('btn-cancel-profil').addEventListener('click',()=>document.getElementById('pform').style.display='none');
-  document.getElementById('mic-select').addEventListener('change',e=>{S.micId=e.target.value||null;if(S.micOn){AE.stop();S.micOn=false;startMic();}});
-  // Refresh-Button fuer Mikrofone (DJI Mic 2 / Lightning fix)
-  document.getElementById('btn-mic-refresh').addEventListener('click',async()=>{
-    if(S.micOn){await populateMics(true);}else{await populateMics(false);}
-  });
-  const prs=document.getElementById('f-printer-ref');
-  REFDB.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;prs.appendChild(o);});
-  prs.addEventListener('change',onPrRef);
-  document.getElementById('f-axis-sel').addEventListener('change',onAxSel);
-  SP.init(document.getElementById('spectrum'));
-  await populateMics(false);
-  renderPSel();
-  if(S.profiles.length>0)loadProf(S.profiles[0].id);
-  renderPList();renderRefList();renderHist();
-  setSt('BEREIT','');
-  installPWA();
-  // Auto-Start Mic -- silent=true: kein "KEIN MIC" wenn iOS ohne User-Gesture blockt
-  startMic(true).catch(()=>{});
-}
-
-function installPWA(){
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./sw.js')
-      .then(r=>console.log('SW registered:',r.scope))
-      .catch(e=>console.warn('SW registration failed:',e));
+  SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
+  if(S.measuring&&msess){
+    const rms=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
+    msess.feed(td,rms,sr);
   }
 }
 
-// populateMics: skipPerm=true wenn Mic schon laeuft (re-enumerate ohne neuen Stream)
-// DJI Mic 2 / Lightning: erscheint erst NACHDEM AudioSession aktiv ist
-async function populateMics(skipPerm){
-  if(!skipPerm){
-    try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());}catch{}
-  }
-  const devs=await AE.enumD();
-  const sel=document.getElementById('mic-select');
-  const prevId=S.micId;
-  sel.innerHTML='';
-  if(devs.length===0){const o=document.createElement('option');o.textContent='Standard-Mikrofon';sel.appendChild(o);return;}
-  let found=false;
-  devs.forEach((d,i)=>{
-    const o=document.createElement('option');
-    o.value=d.deviceId;
-    o.textContent=d.label||'Mikrofon '+(i+1);
-    if(d.deviceId===prevId){o.selected=true;found=true;}
-    sel.appendChild(o);
-  });
-  if(!found){S.micId=devs[0].deviceId;sel.value=devs[0].deviceId;}
-}
-
+// Mic
 async function startMic(silent=false){
   if(!silent)setSt('MIKROFON...','warn');
   const ok=await AE.start(S.micId);
   if(!ok){if(!silent)setSt('KEIN MIC','err');return false;}
   S.micOn=true;setSt('AKTIV','active');
-  // Re-enumerate nach Mic-Start: Lightning/USB Geraete erscheinen jetzt (DJI Mic 2 Fix)
   await populateMics(true);
-  AE.sf((fd,td,sr,fs)=>{
-    // Live-Anzeige: FFT-Peak für Readout (nicht YIN)
-    if(fd&&sr&&fs){
-      const bh=sr/fs,mn=Math.floor(25/bh),mx=Math.ceil(500/bh);
-      let bestBin=mn,bestVal=-Infinity;
-      for(let b=mn;b<=Math.min(mx,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
-      const peakHz=bestBin*bh;
-      if(bestVal>-60&&!S.measuring){S.lastHz=peakHz;S.lastConf=1;updateReadout(peakHz,1);}
-    }
-    SP.draw(fd,sr,fs,S.lastHz,S.lastConf,S.tgt||0);
-    if(S.measuring&&msess){
-      const rms=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
-      msess.feed(fd,rms,td,sr,fs);
-    }
-  });
+  AE.sf(onAudio);
   return true;
 }
 
+async function populateMics(skipPerm){
+  if(!skipPerm){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());}catch{}}
+  const devs=await AE.enumD();
+  const sel=document.getElementById('mic-select');
+  const prev=S.micId;sel.innerHTML='';
+  if(!devs.length){sel.innerHTML='<option>Standard-Mikrofon</option>';return;}
+  let found=false;
+  devs.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||'Mikrofon '+(i+1);if(d.deviceId===prev){o.selected=true;found=true;}sel.appendChild(o);});
+  if(!found){S.micId=devs[0].deviceId;sel.value=devs[0].deviceId;}
+}
+
+// Measurement
 async function startMeasure(){
   if(!S.micOn){const ok=await startMic(false);if(!ok){alert('Mikrofon-Zugriff verweigert.');return;}}
-  // Inline Panel vorbereiten
+  const prof=S.profiles.find(p=>p.id===S.pid);
+  if(!prof||!prof.belts||prof.belts.length===0){alert('Profil hat keine Riemen konfiguriert.');return;}
+  if(prof.belts.length>1&&!S.activeBeltId){showBeltPicker(prof);return;}
+  beginMeasurement();
+}
+
+function showBeltPicker(prof){
+  const el=document.getElementById('belt-picker'),btns=document.getElementById('bp-btns');
+  btns.innerHTML='';
+  prof.belts.forEach(b=>{
+    const btn=document.createElement('button');btn.className='bp-btn';
+    btn.textContent=b.name+(b.targetHz?' — '+b.targetHz+' Hz':'');
+    btn.addEventListener('click',()=>{
+      S.activeBeltId=b.id;S.tgt=b.targetHz||null;
+      updateBeltDisplay(prof);el.style.display='none';beginMeasurement();
+    });
+    btns.appendChild(btn);
+  });
+  el.style.display='block';
+}
+
+function beginMeasurement(){
+  document.getElementById('belt-picker').style.display='none';
   document.getElementById('mi-progress').style.display='block';
   document.getElementById('mi-done').style.display='none';
   document.getElementById('btn-mcancel-inline').style.display='block';
@@ -627,142 +526,111 @@ async function startMeasure(){
 
 function startMProc(){
   S.measuring=true;
-  const reps=S.reps;
-  const colors=measureColors(reps);
+  const reps=S.reps,colors=mColors(reps);
   SP.setPeaks([]);
-
-  const pe=document.getElementById('mprog-inline');
-  pe.innerHTML='';
+  const pe=document.getElementById('mprog-inline');pe.innerHTML='';
   const dots=[];
-  for(let i=0;i<reps;i++){
-    const d=document.createElement('div');
-    d.className='mpdot';
-    d.style.borderColor=colors[i];
-    pe.appendChild(d);dots.push(d);
-  }
+  for(let i=0;i<reps;i++){const d=document.createElement('div');d.className='mpdot';d.style.borderColor=colors[i];pe.appendChild(d);dots.push(d);}
   document.getElementById('mread-inline').textContent='Warte auf Signal...';
-  if(dots.length>0)dots[0].classList.add('pend');
+  if(dots[0])dots[0].classList.add('pend');
 
   const col=[];let cur=0;
-  const T0=Date.now(),TO=15000;
-  let locked=false;           // Sperrzeit nach Messung
-  let bgRms=null;             // rollender Hintergrundpegel
-  let onsetActive=false;      // Onset erkannt, warte auf stabiles Signal
-  let onsetTimer=null;
+  const T0=Date.now(),TO=18000;
+  let bgRms=0.003; // running background estimate — never reset to null
+  let locked=false,onsetActive=false;
 
-  function fftPeak(fd,sr,fs){
-    // Nur noch für Amplitude/Visualisierung verwendet
-    const bh=sr/fs,mn=Math.floor(25/bh),mx=Math.ceil(500/bh);
-    let bestBin=mn,bestVal=-Infinity;
-    for(let b=mn;b<=Math.min(mx,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
-    if(bestVal<-70)return null;
-    return {hz:bestBin*bh, amp:Math.max(0,Math.min(1,(bestVal+90)/90))};
-  }
-
-  msess={feed(fd,rms,td,sr,fs){
-    if(locked)return;
-    if(Date.now()-T0>TO){if(col.length>0)fin();else{document.getElementById('mread-inline').textContent='Timeout -- kein Signal.';S.measuring=false;msess=null;resetMeasureBtn();setTimeout(()=>cancelM(),2000);}return;}
-
-    // Hintergrundpegel aufbauen (EMA, langsam)
-    if(bgRms===null)bgRms=rms;
-    else bgRms=bgRms*0.97+rms*0.03;
-
-    // Onset: RMS mindestens 4× über Hintergrund
-    const threshold=Math.max(bgRms*4, 0.002);
-    if(!onsetActive&&rms>threshold){
-      onsetActive=true;
-      document.getElementById('mread-inline').textContent='...';
-      // Nach Onset: 300ms lang YIN-Readings sammeln → Median
-      const readings=[];
-      const startT=Date.now();
-      locked=true;  // kein zweiter Onset während Messung
-      const collectInterval=setInterval(()=>{
-        if(!S.measuring){clearInterval(collectInterval);return;}
-        if(td){const r=yin(td,sr);if(r&&r.frequency>25&&r.frequency<500&&r.confidence>0.5)readings.push(r.frequency);}
-        if(Date.now()-startT>350){
-          clearInterval(collectInterval);
-          if(readings.length===0){
-            // kein valides Signal — Sperrzeit kurz, nochmal versuchen
-            locked=false;onsetActive=false;bgRms=null;
-            document.getElementById('mread-inline').textContent='Warte auf Signal...';
-            return;
-          }
-          const sorted=[...readings].sort((a,b)=>a-b);
-          const hz=sorted[Math.floor(sorted.length/2)];
-          const amp=fftPeak(fd,sr,fs)?.amp||0.7;
-          col.push({hz,amp});
-          SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-          if(cur<dots.length){
-            dots[cur].classList.remove('pend');
-            dots[cur].style.background=colors[cur];
-            dots[cur].style.borderColor=colors[cur];
-            dots[cur].style.boxShadow='0 0 8px '+colors[cur];
-            cur++;
-          }
-          document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-          if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-          // 1500ms Sperrzeit für Nachklingen
-          setTimeout(()=>{locked=false;onsetActive=false;bgRms=null;},1500);
-          if(col.length>=reps)fin();
-        }
-      },20);
+  msess={feed(td,rms,sr){
+    const now=Date.now();
+    if(now-T0>TO){
+      if(col.length>0)finalize(col,colors);
+      else{document.getElementById('mread-inline').textContent='Timeout — kein Signal.';resetMBtn();setTimeout(()=>cancelM(),2000);}
+      S.measuring=false;msess=null;return;
     }
+    // Slowly update background estimate when idle
+    if(!onsetActive&&!locked)bgRms=bgRms*0.993+rms*0.007;
+    if(locked||onsetActive)return;
+    // Onset: rms must be 3x background AND above absolute floor
+    if(rms<Math.max(bgRms*3,0.0015))return;
+    onsetActive=true;
+    document.getElementById('mread-inline').textContent='...';
+    // Collect YIN over 300ms, take median
+    const readings=[];const t0=Date.now();
+    const iv=setInterval(()=>{
+      if(!S.measuring){clearInterval(iv);return;}
+      const r=yinFixed(td,sr,S.tgt);
+      if(r&&r.confidence>0.5&&r.frequency>25&&r.frequency<500)readings.push(r.frequency);
+      if(Date.now()-t0>300){
+        clearInterval(iv);
+        if(!readings.length){onsetActive=false;document.getElementById('mread-inline').textContent='Warte auf Signal...';return;}
+        const sorted=[...readings].sort((a,b)=>a-b);
+        const hz=sorted[Math.floor(sorted.length/2)];
+        // Amplitude from FFT
+        let amp=0.65;
+        if(latestFdb&&latestSr&&latestFs){const bh=latestSr/latestFs;const bin=Math.round(hz/bh);if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));}
+        col.push({hz,amp});
+        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+        if(cur<dots.length){dots[cur].classList.remove('pend');dots[cur].style.background=colors[cur];dots[cur].style.borderColor=colors[cur];dots[cur].style.boxShadow='0 0 8px '+colors[cur];cur++;}
+        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+        S.lastHz=hz;
+        // Dynamic lockout: wait for signal to drop, max 2s
+        locked=true;
+        const lStart=Date.now();
+        const lIv=setInterval(()=>{
+          if(!S.measuring||Date.now()-lStart>2000){clearInterval(lIv);locked=false;onsetActive=false;}
+        },40);
+        if(col.length>=reps)setTimeout(()=>finalize(col,colors),200);
+      }
+    },20);
   }};
-
-  function fin(){
-    S.measuring=false;msess=null;
-    if(onsetTimer)clearTimeout(onsetTimer);
-    if(col.length===0){document.getElementById('mread-inline').textContent='Kein Signal.';resetMeasureBtn();return;}
-    const s=[...col].sort((a,b)=>a.hz-b.hz);
-    showMR(s[Math.floor(s.length/2)].hz,1);
-  }
-  setTimeout(()=>{if(S.measuring)fin();},TO+500);
+  setTimeout(()=>{if(S.measuring&&msess){S.measuring=false;msess=null;if(col.length>0)finalize(col,colors);else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}}},TO+500);
 }
 
-function showMR(hz,conf){
+function finalize(col,colors){
+  S.measuring=false;msess=null;
+  SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+  const sorted=[...col].sort((a,b)=>a.hz-b.hz);
+  showMR(sorted[Math.floor(sorted.length/2)].hz);
+}
+
+function showMR(hz){
   document.getElementById('mi-progress').style.display='none';
   document.getElementById('mi-done').style.display='block';
   document.getElementById('btn-mcancel-inline').style.display='none';
   document.getElementById('mi-hz').textContent=hz.toFixed(1)+' Hz';
-  document.getElementById('mi-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
+  document.getElementById('mi-conf').textContent='';
   document.getElementById('measure-inline').dataset.hz=hz;
-  resetMeasureBtn();
+  resetMBtn();
 }
 
-function resetMeasureBtn(){
-  document.getElementById('btn-measure').disabled=false;
-  document.getElementById('btn-measure').textContent='MESSEN';
-}
+function resetMBtn(){document.getElementById('btn-measure').disabled=false;document.getElementById('btn-measure').textContent='MESSEN';}
 
 function cancelM(){
-  S.measuring=false;msess=null;
-  SP.setPeaks([]);
+  S.measuring=false;msess=null;SP.setPeaks([]);
   document.getElementById('measure-inline').style.display='none';
-  resetMeasureBtn();
+  document.getElementById('belt-picker').style.display='none';
+  resetMBtn();
 }
 
 function acceptM(){
   const hz=parseFloat(document.getElementById('measure-inline').dataset.hz);
-  const n=parseFloat(document.getElementById('measure-inline').dataset.n);
   const axis=document.querySelector('.axbtn.on')?.dataset.axis||'A';
   if(axis==='A'||axis==='X')S.cmpA={hz,axis};
   else if(axis==='B'||axis==='Y')S.cmpB={hz,axis};
-  const p=S.profiles.find(x=>x.id===S.pid);
-  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:p?p.name:'---',axis,hz:hz.toFixed(1),n:n.toFixed(1)};
+  const prof=S.profiles.find(p=>p.id===S.pid);
+  const belt=prof?.belts?.find(b=>b.id===S.activeBeltId);
+  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:prof?prof.name:'---',belt:belt?belt.name:axis,hz:hz.toFixed(1)};
   S.history.unshift(e);Store.sh(S.history);
-  SP.setPeaks([]);
-  updateReadout(hz,S.lastConf);updateCmp();renderHist();
+  SP.setPeaks([]);updateReadout(hz);updateCmp();renderHist();
   document.getElementById('measure-inline').style.display='none';
-  resetMeasureBtn();
+  resetMBtn();
 }
 
-function updateReadout(hz,conf){
-  const he=document.getElementById('out-hz');
-  const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
+function updateReadout(hz){
+  const he=document.getElementById('out-hz'),de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
   he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
-  bar.style.width=(conf*100).toFixed(0)+'%';
-  bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
-  if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
+  bar.style.width='70%';bar.style.background='var(--green)';
+  if(S.tgt){const d=hz-S.tgt,sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
     if(d<-10){se.className='msub err';se.textContent='ZU LOCKER';}
     else if(d>10){se.className='msub warn';se.textContent='ZU STRAFF';}
     else{se.className='msub ok';se.textContent='IM BEREICH';}
@@ -772,96 +640,81 @@ function updateReadout(hz,conf){
 function updateCmp(){
   if(S.cmpA)document.getElementById('cmp-a').textContent=S.cmpA.hz.toFixed(1)+' Hz';
   if(S.cmpB)document.getElementById('cmp-b').textContent=S.cmpB.hz.toFixed(1)+' Hz';
-  if(S.cmpA&&S.cmpB){const d=Math.abs(S.cmpA.hz-S.cmpB.hz);const el=document.getElementById('cmp-delta');if(d<3){el.className='cval';el.textContent='Delta '+d.toFixed(1)+' Hz ok';}else{el.className='cwarn';el.textContent='Delta '+d.toFixed(1)+' Hz -- nachspannen';}}
+  if(S.cmpA&&S.cmpB){const d=Math.abs(S.cmpA.hz-S.cmpB.hz);const el=document.getElementById('cmp-delta');el.className=d<3?'cval':'cwarn';el.textContent='Delta '+d.toFixed(1)+' Hz'+(d<3?' ok':' — nachspannen');}
 }
 
-function updateCmpFromHist(){
-  const p=S.profiles.find(x=>x.id===S.pid);if(!p)return;S.cmpA=null;S.cmpB=null;
-  S.history.slice(0,10).forEach(h=>{if(h.profile===p.name){if((h.axis==='A'||h.axis==='X')&&!S.cmpA)S.cmpA={hz:parseFloat(h.hz),axis:h.axis};if((h.axis==='B'||h.axis==='Y')&&!S.cmpB)S.cmpB={hz:parseFloat(h.hz),axis:h.axis};}});
-  updateCmp();
-}
-
-function renderHist(){
-  const list=document.getElementById('histlist');list.innerHTML='';
-  if(S.history.length===0){list.innerHTML='<div style="font-size:10px;color:var(--border2);padding:4px 0">Noch keine Messungen.</div>';return;}
-  S.history.slice(0,20).forEach(h=>{const r=document.createElement('div');r.className='histrow';r.innerHTML='<span class="hn">'+h.profile+' | '+h.axis+'</span><span class="hh">'+h.hz+' Hz</span><span class="hnw">'+h.n+' N</span><span class="ht">'+h.time+'</span>';list.appendChild(r);});
-}
-
-function setSt(t,tp){document.getElementById('stxt').textContent=t;document.getElementById('sdot').className='sdot'+(tp?' '+tp:'');}
-
-function switchTab(t){
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
-  document.querySelectorAll('.tpanel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));
-}
-
-function setupSeg(id,cb){
-  const r=document.getElementById(id);
-  r.querySelectorAll('.bseg').forEach(b=>b.addEventListener('click',()=>{r.querySelectorAll('.bseg').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.val);}));
-}
-
-function setSeg(id,val){document.getElementById(id).querySelectorAll('.bseg').forEach(b=>b.classList.toggle('on',b.dataset.val===String(val)));}
-
-function onPrRef(){
-  const pid=document.getElementById('f-printer-ref').value;
-  const asel=document.getElementById('f-axis-sel');const note=document.getElementById('f-afnote');
-  asel.innerHTML='<option value="">-- manuell --</option>';
-  if(!pid){note.textContent='';return;}
-  const pr=REFDB.find(p=>p.id===pid);if(!pr){note.textContent='';return;}
-  pr.axes.forEach(ax=>{const o=document.createElement('option');o.value=JSON.stringify(ax);o.textContent=ax.name;asel.appendChild(o);});
-  note.textContent='Achse waehlen -> Parameter werden gefuellt';
-  if(pr.axes.length===1){asel.selectedIndex=1;onAxSel();}
-}
-
-function onAxSel(){
-  const v=document.getElementById('f-axis-sel').value;if(!v)return;
-  try{const ax=JSON.parse(v);if(ax.spanMm)document.getElementById('f-span').value=ax.spanMm;if(ax.targetHz)document.getElementById('f-target').value=ax.targetHz;if(ax.beltMm)document.getElementById('f-bwidth').value=ax.beltMm;}catch{}
-}
-
-function loadProf(id){
-  const p=S.profiles.find(x=>x.id===id);if(!p)return;
-  S.pid=id;S.bt=p.beltType;S.bw=p.beltWidth;S.tgt=p.targetHz||null;
-  document.getElementById('inp-target').value=S.tgt||'';
-  document.getElementById('profil-sel').value=id;
-  // Info-Felder aktualisieren
-  const bwNames={6:'6 mm',9:'9 mm',12:'12 mm'};
-  const btNames={gates:'Gates LL-2GT',gt2:'GT2 Generic'};
-  document.getElementById('bwidth-display').textContent=bwNames[p.beltWidth]||p.beltWidth+' mm';
-  document.getElementById('btype-display').textContent=btNames[p.beltType]||p.beltType;
-  updateRefHint(p.printerId);updateCmpFromHist();
+function updateBeltDisplay(prof){
+  const belt=prof?.belts?.find(b=>b.id===S.activeBeltId)||prof?.belts?.[0];
+  if(belt){
+    document.getElementById('belt-active-name').textContent=belt.name;
+    document.getElementById('belt-active-info').textContent=(belt.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+belt.beltWidth+'mm'+(belt.targetHz?' | Ziel '+belt.targetHz+' Hz':'');
+    S.tgt=belt.targetHz||null;
+  }else{document.getElementById('belt-active-name').textContent='---';document.getElementById('belt-active-info').textContent='';}
+  updateRefHint(prof?.printerId);
 }
 
 function updateRefHint(pid){
   const pn=document.getElementById('rhpanel'),tl=document.getElementById('rhtitle'),ax=document.getElementById('rhaxes');
   if(!pid){pn.classList.remove('show');return;}
   const pr=REFDB.find(p=>p.id===pid);if(!pr){pn.classList.remove('show');return;}
-  tl.textContent=pr.name+' -- Referenzwerte';
-  ax.innerHTML='';
+  tl.textContent=pr.name+' — Referenz';ax.innerHTML='';
   pr.axes.forEach(a=>{
-    const hz=a.targetHzMax?a.targetHz+'-'+a.targetHzMax+' Hz':a.targetHz+' Hz';
-    const sp=a.spanMm?' | '+a.spanMm+'mm':'';
+    const hz=a.targetHzMax?a.targetHz+'-'+a.targetHzMax+' Hz':a.targetHz?a.targetHz+' Hz':'---';
     const d=document.createElement('div');
-    d.innerHTML='<div class="rhrow"><span class="rhaxis">'+a.name+'</span><span class="rhhz">'+hz+'</span><span style="color:var(--green-dark);font-size:8px">'+sp+'</span></div><div class="rhnote">'+a.note+'</div><div class="rhsrc">'+a.source+'</div>';
+    d.innerHTML='<div class="rhrow"><span class="rhaxis">'+a.name+'</span><span class="rhhz" style="margin-left:8px">'+hz+'</span></div><div class="rhnote">'+a.note+'</div><div class="rhsrc">'+a.source+'</div>';
     ax.appendChild(d);
   });
   pn.classList.add('show');
 }
 
+function setSt(t,tp){document.getElementById('stxt').textContent=t;document.getElementById('sdot').className='sdot'+(tp?' '+tp:'');}
+function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));document.querySelectorAll('.tpanel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));}
+function setupSeg(id,cb){document.getElementById(id).querySelectorAll('.bseg').forEach(b=>b.addEventListener('click',()=>{document.getElementById(id).querySelectorAll('.bseg').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.val);}));}
+
+// Profile management
 function renderPSel(){
   const sel=document.getElementById('profil-sel');sel.innerHTML='';
   S.profiles.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sel.appendChild(o);});
 }
 
-function renderPList(){
-  const list=document.getElementById('pclist');list.innerHTML='';
-  if(S.profiles.length===0){list.innerHTML='<div style="font-size:10px;color:var(--green-dark);padding:8px">Keine Profile. + NEU druecken.</div>';return;}
-  S.profiles.forEach(p=>{
-    const ref=p.printerId?REFDB.find(x=>x.id===p.printerId):null;
-    const c=document.createElement('div');c.className='pcard'+(p.id===S.pid?' act':'');
-    c.innerHTML='<div style="flex:1;min-width:0"><div class="pcn">'+p.name+'</div><div class="pcs">'+(ref?ref.name+' | ':'')+( p.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+p.beltWidth+'mm | '+p.spanMm+'mm | '+(p.targetHz?p.targetHz+'Hz':'-')+'</div></div><div class="pcact"><button class="bsm" data-e="'+p.id+'">EDIT</button><button class="bsm del" data-d="'+p.id+'">X</button></div>';
-    list.appendChild(c);
-    c.querySelector('[data-e]').addEventListener('click',e=>{e.stopPropagation();showPForm(p.id);});
-    c.querySelector('[data-d]').addEventListener('click',e=>{e.stopPropagation();if(confirm('Profil "'+p.name+'" loeschen?')){S.profiles=S.profiles.filter(x=>x.id!==p.id);Store.sp(S.profiles);renderPList();renderPSel();}});
-    c.addEventListener('click',()=>{switchTab('messen');loadProf(p.id);});
+function loadProf(id){
+  const p=S.profiles.find(x=>x.id===id);if(!p)return;
+  S.pid=id;document.getElementById('profil-sel').value=id;
+  // Auto-select first belt, reset activeBeltId if profile changed
+  S.activeBeltId=p.belts&&p.belts.length>0?p.belts[0].id:null;
+  updateBeltDisplay(p);
+  updateCmpFromHist();
+}
+
+function updateCmpFromHist(){
+  S.cmpA=null;S.cmpB=null;
+  const prof=S.profiles.find(x=>x.id===S.pid);if(!prof)return;
+  S.history.slice(0,10).forEach(h=>{
+    if(h.profile===prof.name){
+      if((h.axis==='A'||h.axis==='X')&&!S.cmpA)S.cmpA={hz:parseFloat(h.hz),axis:h.axis};
+      if((h.axis==='B'||h.axis==='Y')&&!S.cmpB)S.cmpB={hz:parseFloat(h.hz),axis:h.axis};
+    }
+  });
+  updateCmp();
+}
+
+function renderHist(){
+  const list=document.getElementById('histlist');list.innerHTML='';
+  if(!S.history.length){list.innerHTML='<div style="font-size:10px;color:var(--border2);padding:4px 0">Noch keine Messungen.</div>';return;}
+  S.history.slice(0,20).forEach(h=>{
+    const r=document.createElement('div');r.className='histrow';
+    r.innerHTML='<span class="hn">'+h.profile+(h.belt?' | '+h.belt:'')+'</span><span class="hh">'+h.hz+' Hz</span><span class="ht">'+h.time+'</span>';
+    list.appendChild(r);
+  });
+}
+
+function renderBeltList(){
+  const list=document.getElementById('belt-list');list.innerHTML='';
+  pendingBelts.forEach((b,i)=>{
+    const el=document.createElement('div');el.className='belt-item';
+    el.innerHTML='<div class="belt-item-info"><span class="belt-item-hz">'+b.name+'</span> — '+(b.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+b.beltWidth+'mm'+(b.targetHz?' | '+b.targetHz+' Hz':'')+'</div><button class="bsm del" data-i="'+i+'">X</button>';
+    el.querySelector('[data-i]').addEventListener('click',()=>{pendingBelts.splice(i,1);renderBeltList();});
+    list.appendChild(el);
   });
 }
 
@@ -871,33 +724,39 @@ function showPForm(id){
     const p=S.profiles.find(x=>x.id===id);
     document.getElementById('ftitle').textContent='PROFIL BEARBEITEN';
     document.getElementById('f-name').value=p.name;
-    document.getElementById('f-btype').value=p.beltType;
-    document.getElementById('f-bwidth').value=p.beltWidth;
-    document.getElementById('f-span').value=p.spanMm||'';
-    document.getElementById('f-target').value=p.targetHz||'';
-    document.getElementById('f-printer-ref').value=p.printerId||'';
-    onPrRef();f.dataset.eid=id;
+    pendingBelts=p.belts?p.belts.map(b=>({...b})):[];
+    f.dataset.eid=id;
   }else{
     document.getElementById('ftitle').textContent='NEUES PROFIL';
-    ['f-name','f-span','f-target'].forEach(i=>document.getElementById(i).value='');
-    document.getElementById('f-btype').value='gates';document.getElementById('f-bwidth').value='6';
-    document.getElementById('f-printer-ref').value='';onPrRef();delete f.dataset.eid;
+    document.getElementById('f-name').value='';pendingBelts=[];delete f.dataset.eid;
   }
-  f.scrollIntoView({behavior:'smooth'});
+  renderBeltList();f.scrollIntoView({behavior:'smooth'});
+}
+
+function renderPList(){
+  const list=document.getElementById('pclist');list.innerHTML='';
+  if(!S.profiles.length){list.innerHTML='<div style="font-size:10px;color:var(--green-dark);padding:8px">Keine Profile. + NEU drücken.</div>';return;}
+  S.profiles.forEach(p=>{
+    const names=(p.belts||[]).map(b=>b.name+(b.targetHz?' '+b.targetHz+'Hz':'')).join(' · ');
+    const c=document.createElement('div');c.className='pcard'+(p.id===S.pid?' act':'');
+    c.innerHTML='<div style="flex:1;min-width:0"><div class="pcn">'+p.name+'</div><div class="pcs">'+names+'</div></div><div class="pcact"><button class="bsm" data-e="'+p.id+'">EDIT</button><button class="bsm del" data-d="'+p.id+'">X</button></div>';
+    list.appendChild(c);
+    c.querySelector('[data-e]').addEventListener('click',e=>{e.stopPropagation();showPForm(p.id);});
+    c.querySelector('[data-d]').addEventListener('click',e=>{e.stopPropagation();if(confirm('Profil "'+p.name+'" löschen?')){S.profiles=S.profiles.filter(x=>x.id!==p.id);Store.sp(S.profiles);renderPList();renderPSel();}});
+    c.addEventListener('click',()=>{switchTab('messen');loadProf(p.id);});
+  });
 }
 
 function saveProf(){
   const f=document.getElementById('pform');
   const name=document.getElementById('f-name').value.trim();if(!name){alert('Name eingeben');return;}
-  const pid=document.getElementById('f-printer-ref').value;
-  const asel=document.getElementById('f-axis-sel');let axn='';
-  if(asel.value){try{axn=JSON.parse(asel.value).name;}catch{}}
-  const p={id:f.dataset.eid||('p_'+Date.now()),name,printerId:pid||null,axis:axn,
-    beltType:document.getElementById('f-btype').value,beltWidth:parseInt(document.getElementById('f-bwidth').value),
-    spanMm:parseFloat(document.getElementById('f-span').value)||285,targetHz:parseFloat(document.getElementById('f-target').value)||null};
+  if(!pendingBelts.length){alert('Mindestens einen Riemen hinzufügen');return;}
+  // Auto-match printerId from REFDB
+  const match=REFDB.find(r=>r.name.toLowerCase()===name.toLowerCase()||r.name.toLowerCase().includes(name.toLowerCase())||name.toLowerCase().includes(r.name.toLowerCase()));
+  const p={id:f.dataset.eid||('p_'+Date.now()),name,printerId:match?match.id:null,belts:pendingBelts};
   if(f.dataset.eid){const i=S.profiles.findIndex(x=>x.id===f.dataset.eid);if(i>=0)S.profiles[i]=p;}
   else S.profiles.push(p);
-  Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();
+  Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();loadProf(p.id);switchTab('messen');
 }
 
 function renderRefList(){
@@ -909,15 +768,17 @@ function renderRefList(){
     list.appendChild(card);
     const ad=card.querySelector('#rax'+idx);
     pr.axes.forEach(ax=>{
-      const hz=ax.targetHzMax?ax.targetHz+'-'+ax.targetHzMax+' Hz':ax.targetHz+' Hz';
-      const sp=ax.spanMm?ax.spanMm+'mm':'-';
+      const hz=ax.targetHzMax?ax.targetHz+'-'+ax.targetHzMax+' Hz':ax.targetHz?ax.targetHz+' Hz':'---';
       const r=document.createElement('div');r.className='rparow';
-      r.innerHTML='<span class="rpaname">'+ax.name+'</span><div><span class="rpahz">'+hz+'</span></div><div><span class="rpanote">'+ax.note+'</span><br><span class="rpasrc">'+ax.source+'</span></div><button class="usebtn">VERWENDEN</button>';
+      r.innerHTML='<span class="rpaname">'+ax.name+'</span><span class="rpahz">'+hz+'</span><div><span class="rpanote">'+ax.note+'</span><br><span class="rpasrc">'+ax.source+'</span></div><button class="usebtn">PROFIL</button>';
       ad.appendChild(r);
       r.querySelector('.usebtn').addEventListener('click',()=>{
-        S.tgt=ax.targetHz;
-        const ti=document.getElementById('inp-target');if(ti)ti.value=ax.targetHz;
-        switchTab('messen');
+        switchTab('profil');
+        document.getElementById('f-name').value=pr.name;
+        pendingBelts=[{id:'b_'+Date.now(),name:ax.name,beltType:'gates',beltWidth:ax.beltMm||6,targetHz:ax.targetHz||null}];
+        const f=document.getElementById('pform');f.style.display='block';delete f.dataset.eid;
+        document.getElementById('ftitle').textContent='PROFIL ERSTELLEN';
+        renderBeltList();
       });
     });
     card.querySelector('.rphead').addEventListener('click',()=>{
@@ -929,18 +790,66 @@ function renderRefList(){
   });
 }
 
-window.addEventListener('load',init);
-
-// Mikrofon stoppen wenn App in Hintergrund / geschlossen
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){
-    if(S.micOn){AE.stop();S.micOn=false;setSt('PAUSE','');}
-  }else{
-    // Wieder sichtbar: Mic neu starten falls vorher aktiv
-    if(!S.micOn)startMic(true).catch(()=>{});
+async function init(){
+  S.profiles=Store.lp();S.history=Store.lh();
+  if(!S.profiles.length){
+    S.profiles=[
+      {id:'p1',name:'HevOrt',printerId:'hevort',belts:[
+        {id:'b1',name:'A-Belt',beltType:'gates',beltWidth:12,targetHz:110},
+        {id:'b2',name:'B-Belt',beltType:'gates',beltWidth:12,targetHz:110}
+      ]},
+      {id:'p2',name:'Prusa Core One',printerId:'prusa_core_one',belts:[
+        {id:'b3',name:'Oberes Belt',beltType:'gates',beltWidth:6,targetHz:98},
+        {id:'b4',name:'Unteres Belt',beltType:'gates',beltWidth:6,targetHz:92}
+      ]}
+    ];
+    Store.sp(S.profiles);
   }
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  setupSeg('reps-row',v=>{S.reps=parseInt(v);});
+  document.getElementById('profil-sel').addEventListener('change',e=>loadProf(e.target.value));
+  document.getElementById('btn-measure').addEventListener('click',startMeasure);
+  document.getElementById('btn-mcancel-inline').addEventListener('click',cancelM);
+  document.getElementById('btn-cancel-done').addEventListener('click',cancelM);
+  document.getElementById('btn-accept').addEventListener('click',acceptM);
+  document.getElementById('btn-retry').addEventListener('click',()=>{
+    document.getElementById('mi-done').style.display='none';
+    document.getElementById('mi-progress').style.display='block';
+    document.getElementById('btn-mcancel-inline').style.display='block';
+    startMProc();
+  });
+  document.querySelectorAll('.axbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.axbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+  document.getElementById('btn-new-profil').addEventListener('click',()=>showPForm(null));
+  document.getElementById('btn-save-profil').addEventListener('click',saveProf);
+  document.getElementById('btn-cancel-profil').addEventListener('click',()=>document.getElementById('pform').style.display='none');
+  document.getElementById('btn-add-belt').addEventListener('click',()=>{
+    const name=document.getElementById('f-belt-name').value.trim();
+    const hz=parseFloat(document.getElementById('f-belt-hz').value)||null;
+    const type=document.getElementById('f-belt-type').value;
+    const width=parseInt(document.getElementById('f-belt-width').value);
+    if(!name){alert('Riemen-Name eingeben');return;}
+    pendingBelts.push({id:'b_'+Date.now(),name,beltType:type,beltWidth:width,targetHz:hz});
+    document.getElementById('f-belt-name').value='';document.getElementById('f-belt-hz').value='';
+    renderBeltList();
+  });
+  document.getElementById('mic-select').addEventListener('change',e=>{S.micId=e.target.value||null;if(S.micOn){AE.stop();S.micOn=false;startMic();}});
+  document.getElementById('btn-mic-refresh').addEventListener('click',async()=>{await populateMics(S.micOn);});
+  SP.init(document.getElementById('spectrum'));
+  await populateMics(false);
+  renderPSel();
+  if(S.profiles.length)loadProf(S.profiles[0].id);
+  renderPList();renderRefList();renderHist();
+  setSt('BEREIT','');
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  startMic(true).catch(()=>{});
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(S.micOn){AE.stop();S.micOn=false;setSt('PAUSE','');}}
+  else{if(!S.micOn)startMic(true).catch(()=>{});}
 });
 window.addEventListener('pagehide',()=>{AE.stop();S.micOn=false;});
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
