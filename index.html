@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v3.4</span>
+    <span class="logo-sub">BELT TENSION v4.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -344,45 +344,92 @@ const Store={
   sh(d){localStorage.setItem(this.H,JSON.stringify(d.slice(0,50)))}
 };
 
-// YIN pitch detection
-function yin(buf,sr){
-  const TH=0.10,MF=25,XF=500;
-  const tm=Math.max(2,Math.floor(sr/XF)),tx=Math.min(Math.floor(buf.length/2)-1,Math.ceil(sr/MF));
-  if(tx<=tm)return null;
-  const yb=new Float32Array(tx+1),hl=Math.floor(buf.length/2);
-  for(let t=1;t<=tx;t++){let s=0;for(let i=0;i<hl;i++){const d=buf[i]-buf[i+t];s+=d*d;}yb[t]=s;}
-  yb[0]=1;let rs=0;
-  for(let t=1;t<=tx;t++){rs+=yb[t];yb[t]=rs>0?(yb[t]*t)/rs:1;}
-  let tau=tm,ok=false;
-  while(tau<tx){if(yb[tau]<TH){while(tau+1<tx&&yb[tau+1]<yb[tau])tau++;ok=true;break;}tau++;}
-  if(!ok)return null;
-  let bt=tau;
-  if(tau>1&&tau<tx){const a=yb[tau-1],b=yb[tau],c=yb[tau+1],dn=2*(2*b-c-a);if(Math.abs(dn)>1e-6)bt=tau+(c-a)/dn;}
-  return{frequency:sr/bt,confidence:Math.max(0,Math.min(1,1-yb[tau]))};
+// ── MPM (McLeod Pitch Method) ─────────────────────────────────────────────────
+// "A Smarter Way to Find Pitch" — McLeod & Wyvill
+// Uses normalized autocorrelation + peak picking with cutoff k=0.93
+// Specifically designed to avoid subharmonic errors — unlike YIN
+function mpm(buf,sr){
+  const n=buf.length;
+  const minTau=Math.floor(sr/500); // max 500Hz
+  const maxTau=Math.min(Math.ceil(sr/25),Math.floor(n/2)-1); // min 25Hz
+  if(maxTau<=minTau)return null;
+
+  // Compute NSDF (Normalized Square Difference Function)
+  // nsdf[tau] = 2*acf(tau) / (m(tau))  where m(tau) = sum(x[i]^2) + sum(x[i+tau]^2)
+  const nsdf=new Float32Array(maxTau+1);
+  // Running sum of squares for efficiency
+  let m=0;
+  for(let i=0;i<n;i++)m+=buf[i]*buf[i];
+  m*=2; // m(0) = 2 * sum(x^2)
+  let headSq=0,tailSq=0;
+  for(let tau=0;tau<=maxTau;tau++){
+    if(tau>0){
+      headSq+=buf[tau-1]*buf[tau-1];
+      tailSq+=buf[n-tau]*buf[n-tau];
+      m=2*(0); // recalculate
+      // m(tau) = sum(x[0..n-tau-1]^2) + sum(x[tau..n-1]^2)
+      // = (total - tail) + (total - head) where total=sum of all squares
+    }
+    // Compute autocorrelation at this lag
+    let acf=0;
+    const lim=n-tau;
+    for(let i=0;i<lim;i++)acf+=buf[i]*buf[i+tau];
+    // Compute m(tau) directly
+    let mt=0;
+    for(let i=0;i<lim;i++)mt+=buf[i]*buf[i]+buf[i+tau]*buf[i+tau];
+    nsdf[tau]=mt>1e-8?(2*acf)/mt:0;
+  }
+
+  // Find key maxima: local maxima in positive regions after first zero-crossing
+  const maxima=[];
+  let pos=0;
+  while(pos<=maxTau&&nsdf[pos]>0)pos++; // skip initial positive region
+  while(pos<=maxTau){
+    while(pos<=maxTau&&nsdf[pos]<=0)pos++; // find next positive region
+    if(pos>maxTau)break;
+    let peak=pos;
+    while(pos<=maxTau&&nsdf[pos]>0){if(nsdf[pos]>nsdf[peak])peak=pos;pos++;}
+    if(peak>=minTau)maxima.push(peak);
+  }
+  if(!maxima.length)return null;
+
+  // Find highest maximum and apply cutoff k=0.93
+  let highest=0;
+  for(const p of maxima)if(nsdf[p]>highest)highest=nsdf[p];
+  if(highest<0.25)return null; // too noisy / no clear pitch
+
+  const cutoff=0.93*highest;
+  let tau=-1;
+  for(const p of maxima){if(nsdf[p]>=cutoff){tau=p;break;}}
+  if(tau<0)tau=maxima[0];
+
+  // Parabolic interpolation for sub-sample precision
+  let exactTau=tau;
+  if(tau>0&&tau<maxTau){
+    const a=nsdf[tau-1],b=nsdf[tau],c=nsdf[tau+1];
+    const dn=2*b-a-c;
+    if(Math.abs(dn)>1e-8)exactTau=tau+(c-a)/(2*dn);
+  }
+
+  const freq=sr/exactTau;
+  if(freq<25||freq>500)return null;
+  return{frequency:freq,clarity:highest};
 }
 
 // ── HPS (Harmonic Product Spectrum) ──────────────────────────────────────────
-// Finds fundamental frequency by multiplying spectrum with downsampled versions.
-// Overtones cancel out, fundamental is amplified. Standard guitar-tuner approach.
+// Fast FFT-based fundamental detection — used for live display + voting confirmation
 function hps(fd,sr,fs,harmonics=4){
   const bh=sr/fs;
   const minBin=Math.floor(25/bh),maxBin=Math.ceil(500/bh);
-  // Convert dB to linear magnitude
   const mag=new Float32Array(fd.length);
   for(let i=0;i<fd.length;i++)mag[i]=Math.pow(10,fd[i]/20);
-  // Multiply spectrum with downsampled versions
   const result=new Float32Array(maxBin+1);
   for(let b=minBin;b<=maxBin;b++){
     result[b]=mag[b];
-    for(let h=2;h<=harmonics;h++){
-      const hb=Math.round(b*h);
-      if(hb<mag.length)result[b]*=mag[hb];
-    }
+    for(let h=2;h<=harmonics;h++){const hb=Math.round(b*h);if(hb<mag.length)result[b]*=mag[hb];}
   }
-  // Find peak
   let bestBin=minBin,bestVal=0;
   for(let b=minBin;b<=maxBin;b++){if(result[b]>bestVal){bestVal=result[b];bestBin=b;}}
-  // Parabolic interpolation for sub-bin precision
   let hz=bestBin*bh;
   if(bestBin>minBin&&bestBin<maxBin){
     const a=result[bestBin-1],b=result[bestBin],c=result[bestBin+1];
@@ -392,20 +439,25 @@ function hps(fd,sr,fs,harmonics=4){
   return Math.max(25,Math.min(500,hz));
 }
 
-// ── VOTING: YIN + HPS ────────────────────────────────────────────────────────
+// ── VOTING: MPM + HPS ────────────────────────────────────────────────────────
+// MPM is primary — designed to find fundamental, avoids subharmonics
+// HPS confirms. If they disagree by more than a harmonic ratio → invalid reading
 function vote(td,fd,sr,fs){
-  const yinR=yin(td,sr);
-  if(!yinR||yinR.confidence<0.35)return{hz:0,valid:false};
-  const yHz=yinR.frequency;
-  if(yHz<20||yHz>500)return{hz:0,valid:false};
+  const mR=mpm(td,sr);
+  if(!mR||mR.clarity<0.25)return{hz:0,valid:false};
+  const mHz=mR.frequency;
   const hHz=hps(fd,sr,fs);
-  // Direct agreement within 15%
-  if(Math.abs(yHz-hHz)<yHz*0.15)return{hz:(yHz+hHz)/2,valid:true};
-  // Harmonic relationship: always trust HPS (designed for fundamental detection)
-  for(const factor of[2,3]){
-    if(Math.abs(yHz*factor-hHz)<hHz*0.15)return{hz:hHz,valid:true};  // YIN found subharmonic
-    if(Math.abs(hHz*factor-yHz)<yHz*0.15)return{hz:hHz,valid:true};  // YIN found harmonic
+
+  // Direct agreement within 12%
+  if(Math.abs(mHz-hHz)<mHz*0.12)return{hz:(mHz+hHz)/2,valid:true};
+
+  // Harmonic relationship: MPM is designed for fundamental, always trust MPM
+  for(const f of[2,3]){
+    if(Math.abs(mHz*f-hHz)<hHz*0.12)return{hz:mHz,valid:true}; // HPS found harmonic
+    if(Math.abs(hHz*f-mHz)<mHz*0.12)return{hz:mHz,valid:true}; // MPM=fundamental, HPS=subharmonic (rare)
   }
+
+  // Complete disagreement → invalid
   return{hz:0,valid:false};
 }
 
