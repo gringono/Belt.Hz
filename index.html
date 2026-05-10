@@ -82,7 +82,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .mi-anzupfen{font-size:18px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:6px}
 .mi-read{font-size:11px;color:var(--green-mid);min-height:18px;margin-bottom:8px;letter-spacing:.5px}
 .mi-hz-big{font-size:36px;font-weight:700;color:var(--green);letter-spacing:2px;line-height:1.1}
-.mi-n{font-size:11px;color:#4af;margin-top:2px;text-shadow:0 0 8px #4af}
 .mi-conf{font-size:9px;color:var(--green-dark);margin-bottom:8px}
 .mi-axis-lbl{font-size:9px;letter-spacing:1px;color:var(--green-mid);margin-bottom:4px}
 
@@ -163,7 +162,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.6</span>
+    <span class="logo-sub">BELT TENSION v2.7</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -327,58 +326,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 </div>
 
 </div>
-</div>
-
-<!-- SPAN OVERLAY (bleibt erhalten) -->
-<div class="overlay" id="ov-span">
-  <div class="ovbox">
-    <div class="ovhead">FREIE SPANLAENGE -- WAS MESSEN?<button class="ovc" id="ov-span-close">X</button></div>
-    <svg viewBox="0 0 460 210" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block">
-      <rect width="460" height="210" fill="#030e04"/>
-      <rect x="80" y="18" width="300" height="170" rx="3" fill="none" stroke="#163020" stroke-width="1"/>
-      <text x="240" y="12" text-anchor="middle" font-family="Courier New" font-size="8" fill="#163020">HINTEN</text>
-      <text x="240" y="210" text-anchor="middle" font-family="Courier New" font-size="8" fill="#163020">VORNE</text>
-      <circle cx="80" cy="18" r="10" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
-      <circle cx="380" cy="18" r="10" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
-      <text x="80" y="7" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">MOT</text>
-      <text x="380" y="7" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">MOT</text>
-      <circle cx="80" cy="188" r="9" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
-      <circle cx="380" cy="188" r="9" fill="#0a2010" stroke="#3a8a50" stroke-width="1.5"/>
-      <text x="80" y="205" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">IDLER fix</text>
-      <text x="380" y="205" text-anchor="middle" font-family="Courier New" font-size="7" fill="#4db870">IDLER fix</text>
-      <rect x="80" y="96" width="300" height="14" rx="2" fill="#0d2a14" stroke="#2a6a40" stroke-width="1.5"/>
-      <text x="240" y="106" text-anchor="middle" font-family="Courier New" font-size="8" fill="#3a8a50">X-GANTRY</text>
-      <circle cx="80" cy="103" r="7" fill="#0a2010" stroke="#00cc33" stroke-width="1.5"/>
-      <circle cx="380" cy="103" r="7" fill="#0a2010" stroke="#00cc33" stroke-width="1.5"/>
-      <text x="64" y="89" font-family="Courier New" font-size="7" fill="#00cc33">UML.</text>
-      <text x="384" y="89" font-family="Courier New" font-size="7" fill="#00cc33">UML.</text>
-      <rect x="214" y="93" width="52" height="22" rx="2" fill="#0a2010" stroke="#2a6a40" stroke-width="1.5"/>
-      <text x="240" y="108" text-anchor="middle" font-family="Courier New" font-size="8" fill="#3a8a50">HEAD</text>
-      <line x1="80" y1="18" x2="80" y2="96" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="4,3"/>
-      <line x1="380" y1="18" x2="380" y2="96" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="4,3"/>
-      <line x1="80" y1="110" x2="214" y2="103" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="3,3"/>
-      <line x1="380" y1="110" x2="266" y2="103" stroke="#1a4a2a" stroke-width="1" stroke-dasharray="3,3"/>
-      <line x1="80" y1="110" x2="80" y2="179" stroke="#00ff41" stroke-width="3"/>
-      <circle cx="80" cy="179" r="5" fill="#00ff41"/>
-      <circle cx="80" cy="110" r="5" fill="#00ff41"/>
-      <line x1="50" y1="110" x2="50" y2="179" stroke="#00ff41" stroke-width="1.5"/>
-      <polygon points="50,110 45,120 55,120" fill="#00ff41"/>
-      <polygon points="50,179 45,169 55,169" fill="#00ff41"/>
-      <text transform="translate(36,145) rotate(-90)" text-anchor="middle" font-family="Courier New" font-size="9" font-weight="bold" fill="#00ff41">SPANLAENGE</text>
-      <text transform="translate(18,145) rotate(-90)" text-anchor="middle" font-family="Courier New" font-size="8" fill="#4db870">HIER MESSEN</text>
-      <line x1="380" y1="103" x2="440" y2="103" stroke="#163020" stroke-width="0.5" stroke-dasharray="2,3"/>
-      <text x="443" y="106" font-family="Courier New" font-size="8" fill="#163020">Y Mitte</text>
-      <line x1="380" y1="188" x2="440" y2="188" stroke="#163020" stroke-width="0.5" stroke-dasharray="2,3"/>
-      <text x="443" y="191" font-family="Courier New" font-size="8" fill="#163020">Y=0</text>
-    </svg>
-    <div class="ovtxt">
-      <b>1.</b> Gantry in die <b>Y-Mitte</b> fahren -- reproduzierbar.<br>
-      <b>2.</b> Messen: von <b>fixem Vorder-Idler</b> zur <b>Umlenkrolle am Gantry-Ende</b> (gruene Linie).<br>
-      <b>3.</b> Kontaktpunkt am Riemen messen, nicht Rollenmittelpunkt.<br>
-      <b>4.</b> Immer dieselbe Seite + Position.<br>
-      <span style="color:var(--green-dark)">Kartesische Drucker: Carriage an Endposition, Abstand Carriage-Umlenkung zu Motorpulley.</span>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -558,7 +505,7 @@ const SP=(()=>{
   return{init,draw,idle,resize,setPeaks};
 })();
 
-const S={bt:'gates',bw:6,span:285,tgt:null,reps:3,pid:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,lastConf:0,micId:null};
+const S={bt:'gates',bw:6,tgt:null,reps:3,pid:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,lastConf:0,micId:null};
 let msess=null;
 
 async function init(){
@@ -574,7 +521,6 @@ async function init(){
 
 
   setupSeg('reps-row',v=>{S.reps=parseInt(v);});
-  document.getElementById('inp-span').addEventListener('input',e=>{S.span=parseFloat(e.target.value)||285;});
   document.getElementById('inp-target').addEventListener('input',e=>{const v=parseFloat(e.target.value);S.tgt=isNaN(v)?null:v;});
   document.getElementById('profil-sel').addEventListener('change',e=>loadProf(e.target.value));
   document.getElementById('btn-measure').addEventListener('click',startMeasure);
@@ -854,7 +800,6 @@ function setupSeg(id,cb){
 }
 
 function setSeg(id,val){document.getElementById(id).querySelectorAll('.bseg').forEach(b=>b.classList.toggle('on',b.dataset.val===String(val)));}
-function updateMu(){document.getElementById('mu-display').textContent='u = '+MU[S.bt][S.bw].toFixed(5)+' kg/m';}
 
 function onPrRef(){
   const pid=document.getElementById('f-printer-ref').value;
