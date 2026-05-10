@@ -163,7 +163,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.4</span>
+    <span class="logo-sub">BELT TENSION v2.6</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -578,8 +578,7 @@ async function init(){
   document.getElementById('inp-target').addEventListener('input',e=>{const v=parseFloat(e.target.value);S.tgt=isNaN(v)?null:v;});
   document.getElementById('profil-sel').addEventListener('change',e=>loadProf(e.target.value));
   document.getElementById('btn-measure').addEventListener('click',startMeasure);
-  document.getElementById('spanbtn').addEventListener('click',()=>document.getElementById('ov-span').classList.add('show'));
-  document.getElementById('ov-span-close').addEventListener('click',()=>document.getElementById('ov-span').classList.remove('show'));
+
   // Inline measure panel buttons
   document.getElementById('btn-mcancel-inline').addEventListener('click',cancelM);
   document.getElementById('btn-cancel-done').addEventListener('click',cancelM);
@@ -968,11 +967,11 @@ function renderRefList(){
       const hz=ax.targetHzMax?ax.targetHz+'-'+ax.targetHzMax+' Hz':ax.targetHz+' Hz';
       const sp=ax.spanMm?ax.spanMm+'mm':'-';
       const r=document.createElement('div');r.className='rparow';
-      r.innerHTML='<span class="rpaname">'+ax.name+'</span><div><span class="rpahz">'+hz+'</span><br><span style="color:var(--green-dark);font-size:9px">Span: '+sp+'</span></div><div><span class="rpanote">'+ax.note+'</span><br><span class="rpasrc">'+ax.source+'</span></div><button class="usebtn">VERWENDEN</button>';
+      r.innerHTML='<span class="rpaname">'+ax.name+'</span><div><span class="rpahz">'+hz+'</span></div><div><span class="rpanote">'+ax.note+'</span><br><span class="rpasrc">'+ax.source+'</span></div><button class="usebtn">VERWENDEN</button>';
       ad.appendChild(r);
       r.querySelector('.usebtn').addEventListener('click',()=>{
-        if(ax.spanMm){S.span=ax.spanMm;document.getElementById('inp-span').value=ax.spanMm;}
-        S.tgt=ax.targetHz;document.getElementById('inp-target').value=ax.targetHz;
+        S.tgt=ax.targetHz;
+        const ti=document.getElementById('inp-target');if(ti)ti.value=ax.targetHz;
         switchTab('messen');
       });
     });
