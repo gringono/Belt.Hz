@@ -40,7 +40,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 #panel-messen{flex-direction:row}
 #sidebar{width:202px;min-width:202px;border-right:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
 #canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.clbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.clbl{font-size:10px;letter-spacing:2px;color:#7de09a;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.info-val{font-size:13px;color:var(--green);font-weight:700;letter-spacing:1px;padding:3px 0}
 .csel{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--green-dim);font-family:var(--font);font-size:11px;padding:5px;border-radius:3px}
 .brow{display:flex;gap:3px}
 .bseg{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--green-dark);font-size:10px;padding:5px 2px;border-radius:3px;font-family:var(--font);cursor:pointer;text-align:center}
@@ -59,14 +60,14 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .rhrow{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;margin-bottom:2px}
 .rhaxis{color:var(--green-mid);font-weight:700}
 .rhhz{color:var(--green)}
-.rhnote{color:var(--green-dark);line-height:1.5;font-size:8px}
-.rhsrc{color:var(--border2);font-size:8px}
+.rhnote{color:#7de09a;line-height:1.5;font-size:9px}
+.rhsrc{color:#5a9a70;font-size:8px}
 #btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;letter-spacing:2px;padding:10px;border-radius:4px;cursor:pointer;width:100%}
 #btn-measure:hover:not(:disabled){background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
 #btn-measure:disabled{opacity:.45;cursor:default}
 #spectrum{width:100%;flex:0 0 175px;display:block;cursor:crosshair}
 .axstrip{display:flex;justify-content:space-between;padding:2px 8px;background:var(--bg3);font-size:9px;color:var(--border2);border-bottom:1px solid var(--border);flex-shrink:0}
-#readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+#readout{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid)}
 .mval{font-size:24px;font-weight:700;color:var(--green);line-height:1.15;white-space:nowrap}
 .mval.warn{color:var(--warn)}.mval.dim{color:var(--border2)}
@@ -92,7 +93,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .cval{color:var(--green);font-weight:700}.csep{color:var(--border2)}.cwarn{color:var(--warn)}
 .histbox{margin:6px 10px 8px;flex:1;overflow-y:auto}
 .histlbl{font-size:9px;letter-spacing:2px;color:var(--green-mid);margin-bottom:4px}
-.histrow{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--green-dim);gap:6px}
+.histrow{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--green-dim);gap:6px}
 .hn{color:var(--green-mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hh{color:var(--green);white-space:nowrap}.hnw{color:var(--green-dark);white-space:nowrap}.ht{color:var(--border2);white-space:nowrap}
 #panel-profil{flex-direction:column;overflow-y:auto;padding:12px}
@@ -162,7 +163,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v2.3</span>
+    <span class="logo-sub">BELT TENSION v2.4</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -186,27 +187,14 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
       <div class="clbl">PROFIL</div>
       <select class="csel" id="profil-sel"></select>
     </div>
-    <div>
-      <div class="clbl">RIEMENTYP</div>
-      <div class="brow" id="btype-row">
-        <button class="bseg" data-val="gt2">GT2</button>
-        <button class="bseg on" data-val="gates">Gates LL-2GT</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div>
+        <div class="clbl">RIEMENBREITE</div>
+        <div class="info-val" id="bwidth-display">12 mm</div>
       </div>
-      <div class="muline" id="mu-display">u = 0.00659 kg/m</div>
-    </div>
-    <div>
-      <div class="clbl">BREITE</div>
-      <div class="brow" id="bwidth-row">
-        <button class="bseg on" data-val="6">6 mm</button>
-        <button class="bseg" data-val="9">9 mm</button>
-        <button class="bseg" data-val="12">12 mm</button>
-      </div>
-    </div>
-    <div>
-      <div class="clbl">FREIE SPANLAENGE <button class="hbtn" id="spanbtn">?</button></div>
-      <div class="irow">
-        <input class="inp" id="inp-span" type="number" value="285" min="50" max="2000">
-        <span class="unit">mm</span>
+      <div>
+        <div class="clbl">RIEMENTYP</div>
+        <div class="info-val" id="btype-display">Gates LL-2GT</div>
       </div>
     </div>
     <div>
@@ -237,7 +225,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     </div>
     <div id="readout">
       <div><div class="mlbl">FREQUENZ</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
-      <div><div class="mlbl" style="color:#4af;opacity:.7">SPANNUNG</div><div id="out-n" style="font-size:16px;color:#4af;text-shadow:0 0 8px #4af;font-weight:700">---<span style="font-size:10px;font-weight:400;margin-left:1px">N</span></div></div>
       <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
     </div>
 
@@ -252,7 +239,6 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
       <!-- Phase 2: Ergebnis -->
       <div id="mi-done" style="display:none">
         <div class="mi-hz-big" id="mi-hz">---</div>
-        <div class="mi-n" id="mi-n">--- N</div>
         <div class="mi-conf" id="mi-conf"></div>
         <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
         <div class="axselw" id="axbtns">
@@ -433,8 +419,8 @@ const REFDB=[
   {id:'prusa_core_one',name:'Prusa Core One',type:'corexy',axes:[
     {name:'Oberes Belt',targetHz:98,targetHzMin:90,targetHzMax:98,spanMm:null,beltMm:6,
      note:'Ziel 98 Hz. Bereich 90-98 Hz. Max. 8 Hz Differenz zwischen oberem und unterem Belt.',source:'help.prusa3d.com (offiziell)'},
-    {name:'Unteres Belt',targetHz:92,targetHzMin:90,targetHzMax:98,spanMm:null,beltMm:6,
-     note:'Ziel 92 Hz. Unteres Belt darf etwas hoeher als oberes sein (max. 8 Hz Differenz).',source:'help.prusa3d.com (offiziell)'}
+    {name:'Unteres Belt',targetHz:92,spanMm:null,beltMm:6,
+     note:'Ziel 92 Hz.',source:'help.prusa3d.com (offiziell)'}
   ]},
   {id:'lh_stinger',name:'LH Stinger',type:'cartesian',axes:[
     {name:'X',targetHz:108,spanMm:null,beltMm:6,note:'Carriage ganz links.',source:'github.com/lhndo/LH-Stinger/wiki'},
@@ -585,8 +571,8 @@ async function init(){
     Store.sp(S.profiles);
   }
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
-  setupSeg('btype-row',v=>{S.bt=v;updateMu();});
-  setupSeg('bwidth-row',v=>{S.bw=parseInt(v);updateMu();});
+
+
   setupSeg('reps-row',v=>{S.reps=parseInt(v);});
   document.getElementById('inp-span').addEventListener('input',e=>{S.span=parseFloat(e.target.value)||285;});
   document.getElementById('inp-target').addEventListener('input',e=>{const v=parseFloat(e.target.value);S.tgt=isNaN(v)?null:v;});
@@ -789,15 +775,12 @@ function startMProc(){
 }
 
 function showMR(hz,conf){
-  const n=tens(hz,S.span,S.bt,S.bw);
   document.getElementById('mi-progress').style.display='none';
   document.getElementById('mi-done').style.display='block';
   document.getElementById('btn-mcancel-inline').style.display='none';
   document.getElementById('mi-hz').textContent=hz.toFixed(1)+' Hz';
-  document.getElementById('mi-n').textContent=n.toFixed(1)+' N';
   document.getElementById('mi-conf').textContent='Konfidenz: '+(conf*100).toFixed(0)+'%';
   document.getElementById('measure-inline').dataset.hz=hz;
-  document.getElementById('measure-inline').dataset.n=n;
   resetMeasureBtn();
 }
 
@@ -829,11 +812,9 @@ function acceptM(){
 }
 
 function updateReadout(hz,conf){
-  const n=tens(hz,S.span,S.bt,S.bw);
-  const he=document.getElementById('out-hz'),ne=document.getElementById('out-n');
+  const he=document.getElementById('out-hz');
   const de=document.getElementById('out-delta'),se=document.getElementById('out-sub'),bar=document.getElementById('cbar');
   he.className='mval';he.innerHTML=hz.toFixed(1)+'<span class="u">Hz</span>';
-  ne.innerHTML=n.toFixed(1)+'<span style="font-size:10px;font-weight:400;margin-left:1px">N</span>';
   bar.style.width=(conf*100).toFixed(0)+'%';
   bar.style.background=conf>0.7?'var(--green)':conf>0.4?'var(--warn)':'var(--err)';
   if(S.tgt){const d=hz-S.tgt;const sg=d>=0?'+':'';de.className='mval'+(Math.abs(d)<5?'':' warn');de.innerHTML=sg+d.toFixed(1)+'<span class="u">Hz</span>';
@@ -894,12 +875,15 @@ function onAxSel(){
 
 function loadProf(id){
   const p=S.profiles.find(x=>x.id===id);if(!p)return;
-  S.pid=id;S.bt=p.beltType;S.bw=p.beltWidth;S.span=p.spanMm||285;S.tgt=p.targetHz||null;
-  setSeg('btype-row',p.beltType);setSeg('bwidth-row',p.beltWidth);
-  document.getElementById('inp-span').value=S.span;
+  S.pid=id;S.bt=p.beltType;S.bw=p.beltWidth;S.tgt=p.targetHz||null;
   document.getElementById('inp-target').value=S.tgt||'';
   document.getElementById('profil-sel').value=id;
-  updateMu();updateRefHint(p.printerId);updateCmpFromHist();
+  // Info-Felder aktualisieren
+  const bwNames={6:'6 mm',9:'9 mm',12:'12 mm'};
+  const btNames={gates:'Gates LL-2GT',gt2:'GT2 Generic'};
+  document.getElementById('bwidth-display').textContent=bwNames[p.beltWidth]||p.beltWidth+' mm';
+  document.getElementById('btype-display').textContent=btNames[p.beltType]||p.beltType;
+  updateRefHint(p.printerId);updateCmpFromHist();
 }
 
 function updateRefHint(pid){
