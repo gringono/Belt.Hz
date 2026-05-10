@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v5.2</span>
+    <span class="logo-sub">BELT TENSION v5.5</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -190,9 +190,9 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     <div>
       <div class="clbl">WIEDERHOLUNGEN</div>
       <div class="brow" id="reps-row">
-        <button class="bseg" data-val="1">1x</button>
         <button class="bseg on" data-val="3">3x</button>
         <button class="bseg" data-val="5">5x</button>
+        <button class="bseg" data-val="7">7x</button>
       </div>
     </div>
     <div class="rhpanel" id="rhpanel">
@@ -224,7 +224,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
       <div id="mi-done" style="display:none">
         <div class="mi-result-lbl">ERGEBNIS</div>
         <div class="mi-hz-big" id="mi-hz">---</div>
-        <div class="mi-conf" id="mi-conf"></div>
+        <div id="mi-delta" style="font-size:16px;font-weight:700;margin:4px 0 2px"></div>
+        <div id="mi-verdict" style="font-size:10px;letter-spacing:2px;margin-bottom:6px"></div>
         <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
         <div class="axselw" id="axbtns">
           <button class="axbtn on" data-axis="A">A</button>
@@ -423,7 +424,7 @@ function mpm(buf,sr){
 // Fast FFT-based fundamental detection — used for live display + voting confirmation
 function hps(fd,sr,fs,harmonics=4){
   const bh=sr/fs;
-  const minBin=Math.floor(50/bh),maxBin=Math.ceil(200/bh);
+  const minBin=Math.floor(50/bh),maxBin=Math.ceil(160/bh);
   const mag=new Float32Array(fd.length);
   for(let i=0;i<fd.length;i++)mag[i]=Math.pow(10,fd[i]/20);
   const result=new Float32Array(maxBin+1);
@@ -447,7 +448,7 @@ function hps(fd,sr,fs,harmonics=4){
 // Simpler and more reliable than HPS for transient signals.
 function fftPeak(fd,sr,fs){
   const bh=sr/fs;
-  const minBin=Math.floor(50/bh),maxBin=Math.ceil(200/bh);
+  const minBin=Math.floor(50/bh),maxBin=Math.ceil(160/bh);
   let bestBin=minBin,bestVal=-Infinity;
   for(let b=minBin;b<=Math.min(maxBin,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
   if(bestVal<-72)return null; // too quiet — no real signal
@@ -567,7 +568,7 @@ function onAudio(fd,td,sr,fs){
   if(fd&&!S.measuring){
     // Live display: HPS only (fast, fan noise filtered by clarity)
     const h=fftPeak(fd,sr,fs);
-    if(h){S.lastHz=h;updateReadout(h);}
+    if(h&&h>=50&&h<=160){S.lastHz=h;updateReadout(h);}
   }
   SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
   if(S.measuring&&msess){
@@ -675,7 +676,7 @@ function startMProc(){
 
     // Collect 10 FFT frames over 200ms, pick most frequent peak bin
     // Fundamental outlasts transient harmonics → wins the vote
-    const FRAMES=10,DURATION=200,FMIN=50,FMAX=200;
+    const FRAMES=10,DURATION=200,FMIN=50,FMAX=160;
     const votes={};  // bin → count
     const t0=Date.now();
     const iv=setInterval(()=>{
@@ -743,8 +744,13 @@ function finalize(col,colors){
   S.measuring=false;msess=null;
   document.getElementById('readout').style.display='';
   SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+  // Outlier filtering: take median, keep values within ±10Hz, re-median
   const sorted=[...col].sort((a,b)=>a.hz-b.hz);
-  showMR(sorted[Math.floor(sorted.length/2)].hz);
+  const median=sorted[Math.floor(sorted.length/2)].hz;
+  const filtered=sorted.filter(p=>Math.abs(p.hz-median)<=10);
+  const clean=filtered.length>=Math.ceil(col.length/2)?filtered:sorted; // need majority
+  const result=clean[Math.floor(clean.length/2)].hz;
+  showMR(result);
 }
 
 function showMR(hz){
@@ -752,7 +758,16 @@ function showMR(hz){
   document.getElementById('mi-done').style.display='block';
   document.getElementById('btn-mcancel-inline').style.display='none';
   document.getElementById('mi-hz').textContent=hz.toFixed(1)+' Hz';
-  document.getElementById('mi-conf').textContent='';
+  // Delta based on measurement result
+  const de=document.getElementById('mi-delta');
+  const ve=document.getElementById('mi-verdict');
+  if(S.tgt){
+    const d=hz-S.tgt;const sg=d>=0?'+':'';
+    de.textContent=sg+d.toFixed(1)+' Hz';
+    if(d<-10){de.style.color='var(--err)';ve.style.color='var(--err)';ve.textContent='ZU LOCKER';}
+    else if(d>10){de.style.color='var(--warn)';ve.style.color='var(--warn)';ve.textContent='ZU STRAFF';}
+    else{de.style.color='var(--green)';ve.style.color='var(--green-dark)';ve.textContent='IM BEREICH';}
+  }else{de.textContent='';ve.textContent='';}
   document.getElementById('measure-inline').dataset.hz=hz;
   resetMBtn();
 }
