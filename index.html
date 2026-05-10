@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v4.1</span>
+    <span class="logo-sub">BELT TENSION v4.3</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -349,6 +349,8 @@ const Store={
 // Uses normalized autocorrelation + peak picking with cutoff k=0.93
 // Specifically designed to avoid subharmonic errors — unlike YIN
 function mpm(buf,sr){
+  // Use last 4096 samples — freshest signal, avoids empty buffer tail
+  buf=buf.length>4096?buf.slice(buf.length-4096):buf;
   const n=buf.length;
   const minTau=Math.floor(sr/500); // max 500Hz
   const maxTau=Math.min(Math.ceil(sr/25),Math.floor(n/2)-1); // min 25Hz
@@ -396,7 +398,7 @@ function mpm(buf,sr){
   // Find highest maximum and apply cutoff k=0.93
   let highest=0;
   for(const p of maxima)if(nsdf[p]>highest)highest=nsdf[p];
-  if(highest<0.25)return null; // too noisy / no clear pitch
+  if(highest<0.2)return null; // too noisy / no clear pitch
 
   const cutoff=0.93*highest;
   let tau=-1;
@@ -442,7 +444,7 @@ function hps(fd,sr,fs,harmonics=4){
 // ── VOTING: MPM + HPS ────────────────────────────────────────────────────────
 function vote(td,fd,sr,fs){
   const mR=mpm(td,sr);
-  if(!mR||mR.clarity<0.45)return{hz:0,valid:false};
+  if(!mR||mR.clarity<0.3)return{hz:0,valid:false};
   const mHz=mR.frequency;
   const hHz=hps(fd,sr,fs);
   if(Math.abs(mHz-hHz)<mHz*0.12)return{hz:(mHz+hHz)/2,valid:true};
@@ -637,26 +639,27 @@ function startMProc(){
       S.measuring=false;msess=null;return;
     }
 
-    // Phase 1: build background estimate (~600ms)
-    if(bgRms===null||bgCount<30){
-      bgRms=bgRms===null?rms:bgRms*0.85+rms*0.15;
-      bgCount++;
-      return;
-    }
+    // Dual-RMS onset: fastRms tracks instant level, slowRms tracks background
+    // Works even with loud fan/printer noise — detects the SPIKE, not absolute level
+    if(bgRms===null){bgRms=rms;bgCount=0;}
+    bgRms=bgRms*0.992+rms*0.008;   // slow: background incl. fan noise
+    bgCount++;
+    if(bgCount<15)return;           // ~300ms calibration
 
-    // Lockout: wait for min time AND for signal to decay
+    // Lockout: wait for min time AND for signal to decay back to background
     if(locked){
-      bgRms=bgRms*0.99+rms*0.01;
+      bgRms=bgRms*0.997+rms*0.003;
       if(now<lockUntil)return;
-      if(rms>bgRms*2.5)return; // still ringing — keep waiting
+      if(rms>bgRms*1.8)return;     // belt still ringing — wait
       locked=false;
     }
 
-    // Update background slowly when quiet
-    if(rms<bgRms*1.8)bgRms=bgRms*0.997+rms*0.003;
+    // Only update background when truly quiet (not during belt decay)
+    if(rms<bgRms*1.3)bgRms=bgRms*0.996+rms*0.004;
 
-    // Onset: 4× background, hard floor 0.003
-    if(rms<Math.max(bgRms*4,0.003))return;
+    // Onset: fast EMA must be 2× slow background — detects transient, not steady noise
+    const fastRms=rms; // current frame is already "fast"
+    if(fastRms<bgRms*2.0||fastRms<0.0008)return;
 
     // IMMEDIATE measurement on fresh buffer — no 400ms window
     if(!latestFdb)return;
