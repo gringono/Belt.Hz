@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v4.8</span>
+    <span class="logo-sub">BELT TENSION v5.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -206,7 +206,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     <canvas id="spectrum"></canvas>
     <div class="axstrip"><span>30</span><span>60</span><span>100</span><span>150</span><span>200</span><span>300</span><span>420 Hz</span></div>
     <div id="readout">
-      <div><div class="mlbl">FREQUENZ</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
+      <div><div class="mlbl">LIVE</div><div class="mval dim" id="out-hz">---<span class="u">Hz</span></div><div class="cbar-w"><div class="cbar" id="cbar" style="width:0"></div></div></div>
       <div><div class="mlbl">DELTA ZIEL</div><div class="mval dim" id="out-delta">---</div><div class="msub" id="out-sub"></div></div>
     </div>
 
@@ -632,6 +632,7 @@ function beginMeasurement(){
   document.getElementById('measure-inline').style.display='block';
   document.getElementById('btn-measure').disabled=true;
   document.getElementById('btn-measure').textContent='LAEUFT...';
+  document.getElementById('readout').style.opacity='0.2';document.getElementById('readout').style.pointerEvents='none';
   startMProc();
 }
 
@@ -657,10 +658,9 @@ function startMProc(){
       else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}
       S.measuring=false;msess=null;return;
     }
-    // Build background estimate (~300ms)
+    // Background calibration ~300ms
     if(bgRms===null){bgRms=rms;bgCount=0;}
-    bgRms=bgRms*0.992+rms*0.008;
-    bgCount++;
+    bgRms=bgRms*0.992+rms*0.008;bgCount++;
     if(bgCount<15)return;
     // Lockout
     if(locked){
@@ -671,43 +671,47 @@ function startMProc(){
     }
     // Update background when quiet
     if(rms<bgRms*1.3)bgRms=bgRms*0.996+rms*0.004;
-    // Onset: transient detection — works with fan/printer noise
+    // Onset: transient spike — works with printer/fan noise
     if(rms<bgRms*2.0||rms<0.0008)return;
-    // FFT peak measurement: 3 readings over 60ms, take median
     if(!latestFdb)return;
+    // Lock immediately to prevent double-trigger
     locked=true;lockUntil=now+2000;
-    const p0=fftPeak(latestFdb,latestSr,latestFs);
-    if(!p0){locked=false;return;}
-    const readings=[p0];
-    const t0=Date.now();
-    const iv=setInterval(()=>{
-      if(!S.measuring){clearInterval(iv);return;}
-      if(latestFdb){const p=fftPeak(latestFdb,latestSr,latestFs);if(p)readings.push(p);}
-      if(readings.length>=3||Date.now()-t0>80){
-        clearInterval(iv);
-        const valid=readings.filter(h=>h>25&&h<450);
-        if(!valid.length)return;
-        valid.sort((a,b)=>a-b);
-        const hz=valid[Math.floor(valid.length/2)];
-        let amp=0.65;
-        const bh=latestSr/latestFs;
-        const bin=Math.round(hz/bh);
-        if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
-        col.push({hz,amp});
-        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-        if(cur<dots.length){
-          dots[cur].classList.remove('pend');
-          dots[cur].style.background=colors[cur];
-          dots[cur].style.borderColor=colors[cur];
-          dots[cur].style.boxShadow='0 0 8px '+colors[cur];
-          cur++;
+    // Wait 60ms for attack transient to settle — fundamental emerges after attack
+    setTimeout(()=>{
+      if(!S.measuring)return;
+      const readings=[];
+      const t0=Date.now();
+      const iv=setInterval(()=>{
+        if(!S.measuring){clearInterval(iv);return;}
+        if(latestFdb){
+          const p=fftPeak(latestFdb,latestSr,latestFs);
+          if(p)readings.push(p);
         }
-        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-        S.lastHz=hz;
-        if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
-      }
-    },20);
+        if(readings.length>=4||Date.now()-t0>100){
+          clearInterval(iv);
+          const valid=readings.filter(h=>h>55&&h<300);
+          if(!valid.length)return;
+          valid.sort((a,b)=>a-b);
+          const hz=valid[Math.floor(valid.length/2)];
+          let amp=0.65;
+          const bh=latestSr/latestFs;const bin=Math.round(hz/bh);
+          if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
+          col.push({hz,amp});
+          SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+          if(cur<dots.length){
+            dots[cur].classList.remove('pend');
+            dots[cur].style.background=colors[cur];
+            dots[cur].style.borderColor=colors[cur];
+            dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+            cur++;
+          }
+          document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+          if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+          S.lastHz=hz;
+          if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
+        }
+      },25);
+    },60);
   }};
 
   setTimeout(()=>{
@@ -721,6 +725,7 @@ function startMProc(){
 
 function finalize(col,colors){
   S.measuring=false;msess=null;
+  document.getElementById('readout').style.opacity='1';document.getElementById('readout').style.pointerEvents='';
   SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
   const sorted=[...col].sort((a,b)=>a.hz-b.hz);
   showMR(sorted[Math.floor(sorted.length/2)].hz);
@@ -742,6 +747,7 @@ function cancelM(){
   S.measuring=false;msess=null;SP.setPeaks([]);
   document.getElementById('measure-inline').style.display='none';
   document.getElementById('belt-picker').style.display='none';
+  document.getElementById('readout').style.opacity='1';document.getElementById('readout').style.pointerEvents='';
   resetMBtn();
 }
 
