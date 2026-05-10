@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v4.5</span>
+    <span class="logo-sub">BELT TENSION v4.6</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -629,8 +629,6 @@ function startMProc(){
 
   const col=[];let cur=0;
   const T0=Date.now(),TO=20000;
-
-  // Calibrate background for 600ms before detecting onset
   let bgRms=null,bgCount=0;
   let locked=false,lockUntil=0;
 
@@ -641,67 +639,55 @@ function startMProc(){
       else{document.getElementById('mread-inline').textContent='Timeout.';resetMBtn();setTimeout(()=>cancelM(),2000);}
       S.measuring=false;msess=null;return;
     }
-
-    // Dual-RMS onset: fastRms tracks instant level, slowRms tracks background
-    // Works even with loud fan/printer noise — detects the SPIKE, not absolute level
+    // Build background estimate (~300ms)
     if(bgRms===null){bgRms=rms;bgCount=0;}
-    bgRms=bgRms*0.992+rms*0.008;   // slow: background incl. fan noise
+    bgRms=bgRms*0.992+rms*0.008;
     bgCount++;
-    if(bgCount<15)return;           // ~300ms calibration
-
-    // Lockout: wait for min time AND for signal to decay back to background
+    if(bgCount<15)return;
+    // Lockout
     if(locked){
       bgRms=bgRms*0.997+rms*0.003;
       if(now<lockUntil)return;
-      if(rms>bgRms*1.8)return;     // belt still ringing — wait
+      if(rms>bgRms*1.8)return;
       locked=false;
     }
-
-    // Only update background when truly quiet (not during belt decay)
+    // Update background when quiet
     if(rms<bgRms*1.3)bgRms=bgRms*0.996+rms*0.004;
-
-    // Onset: fast EMA must be 2× slow background — detects transient, not steady noise
-    const fastRms=rms; // current frame is already "fast"
-    if(fastRms<bgRms*2.0||fastRms<0.0008)return;
-
-    // HPS-based measurement: take 3 quick readings over 60ms, use median
+    // Onset: transient detection — works with fan/printer noise
+    if(rms<bgRms*2.0||rms<0.0008)return;
+    // HPS measurement: 3 readings over 60ms, take median
     if(!latestFdb)return;
-    const hzNow=hps(latestFdb,latestSr,latestFs);
-    if(hzNow<25||hzNow>500){
-      locked=true;lockUntil=now+300;
-      return;
-    }
-    // Collect 3 HPS readings 20ms apart to reduce noise
-    const hReadings=[hzNow];
-    const hStart=Date.now();
-    const hIv=setInterval(()=>{
-      if(!S.measuring){clearInterval(hIv);return;}
-      if(latestFdb)hReadings.push(hps(latestFdb,latestSr,latestFs));
-      if(hReadings.length>=3||Date.now()-hStart>80){
-        clearInterval(hIv);
-        const sorted=[...hReadings].filter(h=>h>25&&h<500).sort((a,b)=>a-b);
-        if(!sorted.length){locked=true;lockUntil=Date.now()+300;return;}
-        const hz=sorted[Math.floor(sorted.length/2)];
-    let amp=0.65;
-    const bh=latestSr/latestFs;const bin=Math.round(hz/bh);
-    if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
-    col.push({hz,amp});
-    SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-    if(cur<dots.length){
-      dots[cur].classList.remove('pend');
-      dots[cur].style.background=colors[cur];
-      dots[cur].style.borderColor=colors[cur];
-      dots[cur].style.boxShadow='0 0 8px '+colors[cur];
-      cur++;
-    }
-    document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
-    if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
-    S.lastHz=hz;
-
-    // Lock 2.5s min — belt must fully decay before next reading
     locked=true;lockUntil=now+1500;
-
-    if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
+    const readings=[hps(latestFdb,latestSr,latestFs)];
+    const t0=Date.now();
+    const iv=setInterval(()=>{
+      if(!S.measuring){clearInterval(iv);return;}
+      if(latestFdb)readings.push(hps(latestFdb,latestSr,latestFs));
+      if(readings.length>=3||Date.now()-t0>80){
+        clearInterval(iv);
+        const valid=readings.filter(h=>h>25&&h<450);
+        if(!valid.length)return;
+        valid.sort((a,b)=>a-b);
+        const hz=valid[Math.floor(valid.length/2)];
+        let amp=0.65;
+        const bh=latestSr/latestFs;
+        const bin=Math.round(hz/bh);
+        if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));
+        col.push({hz,amp});
+        SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
+        if(cur<dots.length){
+          dots[cur].classList.remove('pend');
+          dots[cur].style.background=colors[cur];
+          dots[cur].style.borderColor=colors[cur];
+          dots[cur].style.boxShadow='0 0 8px '+colors[cur];
+          cur++;
+        }
+        document.getElementById('mread-inline').textContent=col.map(p=>p.hz.toFixed(1)+' Hz').join(' | ');
+        if(col.length<reps&&cur<dots.length)dots[cur].classList.add('pend');
+        S.lastHz=hz;
+        if(col.length>=reps)setTimeout(()=>finalize(col,colors),100);
+      }
+    },20);
   }};
 
   setTimeout(()=>{
