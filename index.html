@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v3.3</span>
+    <span class="logo-sub">BELT TENSION v3.4</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -393,26 +393,20 @@ function hps(fd,sr,fs,harmonics=4){
 }
 
 // ── VOTING: YIN + HPS ────────────────────────────────────────────────────────
-// Returns {hz, valid, reason}
-// valid=true: both algorithms agree → reliable result
-// valid=false: disagreement → discard this reading
 function vote(td,fd,sr,fs){
   const yinR=yin(td,sr);
-  if(!yinR||yinR.confidence<0.4)return{hz:0,valid:false,reason:'yin-low-conf'};
+  if(!yinR||yinR.confidence<0.35)return{hz:0,valid:false};
   const yHz=yinR.frequency;
-  if(yHz<20||yHz>500)return{hz:0,valid:false,reason:'yin-out-of-range'};
+  if(yHz<20||yHz>500)return{hz:0,valid:false};
   const hHz=hps(fd,sr,fs);
-  // Direct agreement: within 15%
-  const diff=Math.abs(yHz-hHz);
-  const thresh=yHz*0.15;
-  if(diff<=thresh)return{hz:(yHz+hHz)/2,valid:true,reason:'direct-match'};
-  // Harmonic relationship: one is ~2x or ~3x the other → take the lower (=fundamental)
+  // Direct agreement within 15%
+  if(Math.abs(yHz-hHz)<yHz*0.15)return{hz:(yHz+hHz)/2,valid:true};
+  // Harmonic relationship: always trust HPS (designed for fundamental detection)
   for(const factor of[2,3]){
-    if(Math.abs(yHz*factor-hHz)<hHz*0.15)return{hz:yHz,valid:true,reason:'yin=fundamental'};
-    if(Math.abs(hHz*factor-yHz)<yHz*0.15)return{hz:hHz,valid:true,reason:'hps=fundamental'};
+    if(Math.abs(yHz*factor-hHz)<hHz*0.15)return{hz:hHz,valid:true};  // YIN found subharmonic
+    if(Math.abs(hHz*factor-yHz)<yHz*0.15)return{hz:hHz,valid:true};  // YIN found harmonic
   }
-  // Disagree — unreliable reading
-  return{hz:0,valid:false,reason:'mismatch yHz='+yHz.toFixed(1)+' hHz='+hHz.toFixed(1)};
+  return{hz:0,valid:false};
 }
 
 // Measure colors
@@ -580,7 +574,7 @@ function startMProc(){
 
   const col=[];let cur=0;
   const T0=Date.now(),TO=18000;
-  let bgRms=0.003; // running background estimate — never reset to null
+  let bgRms=0.001; // low start — stiff belts have small amplitude
   let locked=false,onsetActive=false;
 
   msess={feed(td,rms,sr){
@@ -590,11 +584,10 @@ function startMProc(){
       else{document.getElementById('mread-inline').textContent='Timeout — kein Signal.';resetMBtn();setTimeout(()=>cancelM(),2000);}
       S.measuring=false;msess=null;return;
     }
-    // Slowly update background estimate when idle
     if(!onsetActive&&!locked)bgRms=bgRms*0.993+rms*0.007;
     if(locked||onsetActive)return;
-    // Onset: rms must be 2.5x background AND above absolute floor
-    if(rms<Math.max(bgRms*2.5,0.001))return;
+    // Lower threshold for stiff high-tension belts
+    if(rms<Math.max(bgRms*2.0,0.0008))return;
     onsetActive=true;
     document.getElementById('mread-inline').textContent='...';
     // Collect votes over 400ms after onset
