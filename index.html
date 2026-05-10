@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v3.1</span>
+    <span class="logo-sub">BELT TENSION v3.3</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -361,17 +361,58 @@ function yin(buf,sr){
   return{frequency:sr/bt,confidence:Math.max(0,Math.min(1,1-yb[tau]))};
 }
 
-// Anti-subharmonic: if result too low vs target, try doubling/tripling
-function yinFixed(buf,sr,targetHz){
-  const r=yin(buf,sr);
-  if(!r||r.frequency<10)return null;
-  let hz=r.frequency;
-  const floor=targetHz?targetHz*0.45:55;
-  if(hz<floor){
-    if(hz*2<=500&&hz*2>=floor)hz=hz*2;
-    else if(hz*3<=500&&hz*3>=floor)hz=hz*3;
+// ── HPS (Harmonic Product Spectrum) ──────────────────────────────────────────
+// Finds fundamental frequency by multiplying spectrum with downsampled versions.
+// Overtones cancel out, fundamental is amplified. Standard guitar-tuner approach.
+function hps(fd,sr,fs,harmonics=4){
+  const bh=sr/fs;
+  const minBin=Math.floor(25/bh),maxBin=Math.ceil(500/bh);
+  // Convert dB to linear magnitude
+  const mag=new Float32Array(fd.length);
+  for(let i=0;i<fd.length;i++)mag[i]=Math.pow(10,fd[i]/20);
+  // Multiply spectrum with downsampled versions
+  const result=new Float32Array(maxBin+1);
+  for(let b=minBin;b<=maxBin;b++){
+    result[b]=mag[b];
+    for(let h=2;h<=harmonics;h++){
+      const hb=Math.round(b*h);
+      if(hb<mag.length)result[b]*=mag[hb];
+    }
   }
-  return{frequency:hz,confidence:r.confidence};
+  // Find peak
+  let bestBin=minBin,bestVal=0;
+  for(let b=minBin;b<=maxBin;b++){if(result[b]>bestVal){bestVal=result[b];bestBin=b;}}
+  // Parabolic interpolation for sub-bin precision
+  let hz=bestBin*bh;
+  if(bestBin>minBin&&bestBin<maxBin){
+    const a=result[bestBin-1],b=result[bestBin],c=result[bestBin+1];
+    const dn=2*(2*b-c-a);
+    if(Math.abs(dn)>1e-12)hz=(bestBin+(c-a)/dn)*bh;
+  }
+  return Math.max(25,Math.min(500,hz));
+}
+
+// ── VOTING: YIN + HPS ────────────────────────────────────────────────────────
+// Returns {hz, valid, reason}
+// valid=true: both algorithms agree → reliable result
+// valid=false: disagreement → discard this reading
+function vote(td,fd,sr,fs){
+  const yinR=yin(td,sr);
+  if(!yinR||yinR.confidence<0.4)return{hz:0,valid:false,reason:'yin-low-conf'};
+  const yHz=yinR.frequency;
+  if(yHz<20||yHz>500)return{hz:0,valid:false,reason:'yin-out-of-range'};
+  const hHz=hps(fd,sr,fs);
+  // Direct agreement: within 15%
+  const diff=Math.abs(yHz-hHz);
+  const thresh=yHz*0.15;
+  if(diff<=thresh)return{hz:(yHz+hHz)/2,valid:true,reason:'direct-match'};
+  // Harmonic relationship: one is ~2x or ~3x the other → take the lower (=fundamental)
+  for(const factor of[2,3]){
+    if(Math.abs(yHz*factor-hHz)<hHz*0.15)return{hz:yHz,valid:true,reason:'yin=fundamental'};
+    if(Math.abs(hHz*factor-yHz)<yHz*0.15)return{hz:hHz,valid:true,reason:'hps=fundamental'};
+  }
+  // Disagree — unreliable reading
+  return{hz:0,valid:false,reason:'mismatch yHz='+yHz.toFixed(1)+' hHz='+hHz.toFixed(1)};
 }
 
 // Measure colors
@@ -456,9 +497,9 @@ let latestFdb=null,latestSr=44100,latestFs=8192;
 // Audio callback
 function onAudio(fd,td,sr,fs){
   latestFdb=fd;latestSr=sr;latestFs=fs;
-  if(td&&!S.measuring){
-    const r=yinFixed(td,sr,S.tgt);
-    if(r&&r.frequency>25&&r.frequency<500&&r.confidence>0.5){S.lastHz=r.frequency;updateReadout(r.frequency);}
+  if(td&&fd&&!S.measuring){
+    const v=vote(td,fd,sr,fs);
+    if(v.valid){S.lastHz=v.hz;updateReadout(v.hz);}
   }
   SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
   if(S.measuring&&msess){
@@ -552,19 +593,27 @@ function startMProc(){
     // Slowly update background estimate when idle
     if(!onsetActive&&!locked)bgRms=bgRms*0.993+rms*0.007;
     if(locked||onsetActive)return;
-    // Onset: rms must be 3x background AND above absolute floor
-    if(rms<Math.max(bgRms*3,0.0015))return;
+    // Onset: rms must be 2.5x background AND above absolute floor
+    if(rms<Math.max(bgRms*2.5,0.001))return;
     onsetActive=true;
     document.getElementById('mread-inline').textContent='...';
-    // Collect YIN over 300ms, take median
+    // Collect votes over 400ms after onset
     const readings=[];const t0=Date.now();
     const iv=setInterval(()=>{
       if(!S.measuring){clearInterval(iv);return;}
-      const r=yinFixed(td,sr,S.tgt);
-      if(r&&r.confidence>0.5&&r.frequency>25&&r.frequency<500)readings.push(r.frequency);
-      if(Date.now()-t0>300){
+      if(latestFdb){
+        const v=vote(td,latestFdb,sr,latestFs);
+        if(v.valid)readings.push(v.hz);
+      }
+      if(Date.now()-t0>400){
         clearInterval(iv);
-        if(!readings.length){onsetActive=false;document.getElementById('mread-inline').textContent='Warte auf Signal...';return;}
+        if(!readings.length){
+          // No valid votes → discard, let user try again
+          onsetActive=false;
+          document.getElementById('mread-inline').textContent='Fehlmessung — nochmal zupfen';
+          setTimeout(()=>{if(S.measuring)document.getElementById('mread-inline').textContent='Warte auf Signal...';},1500);
+          return;
+        }
         const sorted=[...readings].sort((a,b)=>a-b);
         const hz=sorted[Math.floor(sorted.length/2)];
         // Amplitude from FFT
