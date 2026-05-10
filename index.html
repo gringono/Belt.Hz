@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v3.0</span>
+    <span class="logo-sub">BELT TENSION v3.1</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -494,7 +494,10 @@ async function startMeasure(){
   if(!S.micOn){const ok=await startMic(false);if(!ok){alert('Mikrofon-Zugriff verweigert.');return;}}
   const prof=S.profiles.find(p=>p.id===S.pid);
   if(!prof||!prof.belts||prof.belts.length===0){alert('Profil hat keine Riemen konfiguriert.');return;}
-  if(prof.belts.length>1&&!S.activeBeltId){showBeltPicker(prof);return;}
+  // Immer Picker zeigen wenn mehrere Riemen vorhanden
+  if(prof.belts.length>1){S.activeBeltId=null;showBeltPicker(prof);return;}
+  S.activeBeltId=prof.belts[0].id;
+  S.tgt=prof.belts[0].targetHz||null;
   beginMeasurement();
 }
 
