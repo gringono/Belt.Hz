@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v5.5</span>
+    <span class="logo-sub">BELT TENSION v5.6</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -742,7 +742,6 @@ function startMProc(){
 
 function finalize(col,colors){
   S.measuring=false;msess=null;
-  document.getElementById('readout').style.display='';
   SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
   // Outlier filtering: take median, keep values within ±10Hz, re-median
   const sorted=[...col].sort((a,b)=>a.hz-b.hz);
