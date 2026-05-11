@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.4</span>
+    <span class="logo-sub">BELT TENSION v6.5</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -1176,7 +1176,7 @@ function runCalMeasurement(targetHz,idx){
   const progEl=document.getElementById('cal-prog-'+idx);
   const dotsEl=document.getElementById('cal-dots-'+idx);
   btn.disabled=true;btn.classList.add('measuring');btn.textContent='LAEUFT...';
-  res.textContent='';liveEl.textContent='Warte auf Signal...';
+  res.textContent='';liveEl.textContent=targetHz+' Hz Ton abspielen';
   progEl.style.display='block';
   // Build 5 dots
   const CAL_REPS=5;dotsEl.innerHTML='';const dots=[];
@@ -1309,7 +1309,7 @@ function initCalTab(){
       const btn=document.getElementById('cal-btn-'+idx);
       btn.textContent='MESSEN';btn.disabled=false;btn.classList.remove('measuring');
       document.getElementById('cal-res-'+idx).textContent='';
-      document.getElementById('cal-live-'+idx).textContent='Warte auf Signal...';
+      const calHzLabels=[92,125,160];document.getElementById('cal-live-'+idx).textContent=calHzLabels[idx]+' Hz Ton abspielen';
       document.getElementById('cal-live-'+idx).style.color='var(--green)';
       document.getElementById('cal-prog-'+idx).style.display='none';
     });
