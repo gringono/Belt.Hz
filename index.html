@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.0</span>
+    <span class="logo-sub">BELT TENSION v6.1</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -320,6 +320,65 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
   <div style="width:100%;padding:12px;overflow-y:auto">
     <div class="refnote">COMMUNITY-RICHTWERTE. Als Ausgangspunkt verwenden.</div>
     <div id="reflist"></div>
+  </div>
+</div>
+
+<div class="tpanel" id="panel-kalibrieren">
+  <div style="width:100%;padding:12px;overflow-y:auto">
+    <div class="cal-note">
+      <b>Anleitung:</b> cal.html auf einem zweiten Gerät öffnen.<br>
+      Dort die passende Frequenz abspielen, dann hier MESSEN drücken.<br>
+      Belt.Hz misst 5× und berechnet den Kalibrierungsfaktor.
+    </div>
+
+    <div class="cal-active-box">
+      <div class="cal-active-dot" id="cal-dot"></div>
+      <div>
+        <div class="cal-active-txt" id="cal-active-txt">Kein Kalibrierungsfaktor — Faktor = 1.000</div>
+        <div class="cal-prog" id="cal-prog"></div>
+      </div>
+    </div>
+
+    <div class="cal-step">
+      <div class="cal-step-head">
+        <div><div class="cal-step-hz">92 Hz</div><div class="cal-step-lbl">PRUSA UNTERES BELT</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cal-step-result" id="cal-res-0">---</span>
+          <button class="cal-meas-btn" id="cal-btn-0" data-target="92">MESSEN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cal-step">
+      <div class="cal-step-head">
+        <div><div class="cal-step-hz">125 Hz</div><div class="cal-step-lbl">MITTE</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cal-step-result" id="cal-res-1">---</span>
+          <button class="cal-meas-btn" id="cal-btn-1" data-target="125">MESSEN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cal-step">
+      <div class="cal-step-head">
+        <div><div class="cal-step-hz">160 Hz</div><div class="cal-step-lbl">HOCH</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cal-step-result" id="cal-res-2">---</span>
+          <button class="cal-meas-btn" id="cal-btn-2" data-target="160">MESSEN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cal-result-box" id="cal-result-box" style="display:none">
+      <div class="cal-factor-lbl">BERECHNETER FAKTOR</div>
+      <div class="cal-factor-val" id="cal-factor-val">1.000</div>
+      <div class="cal-factor-status" id="cal-factor-status"></div>
+    </div>
+
+    <div class="cal-btns" style="margin-top:12px">
+      <button class="cal-apply-btn" id="cal-apply-btn" style="display:none">FAKTOR ANWENDEN</button>
+      <button class="cal-reset-btn" id="cal-reset-btn">ZURUECKSETZEN</button>
+    </div>
   </div>
 </div>
 
