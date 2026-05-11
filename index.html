@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.6</span>
+    <span class="logo-sub">BELT TENSION v6.8</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -215,9 +215,9 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
     <div>
       <div class="clbl">WIEDERHOLUNGEN</div>
       <div class="brow" id="reps-row">
-        <button class="bseg on" data-val="3">3x</button>
         <button class="bseg" data-val="5">5x</button>
-        <button class="bseg" data-val="7">7x</button>
+        <button class="bseg on" data-val="7">7x</button>
+        <button class="bseg" data-val="9">9x</button>
       </div>
     </div>
     <div class="rhpanel" id="rhpanel">
@@ -660,13 +660,13 @@ const SP=(()=>{
 })();
 
 // State
-const S={tgt:null,reps:3,pid:null,activeBeltId:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,micId:null};
+const S={tgt:null,reps:7,pid:null,activeBeltId:null,profiles:[],history:[],cmpA:null,cmpB:null,measuring:false,micOn:false,lastHz:0,micId:null};
 let msess=null,pendingBelts=[];
-let latestFdb=null,latestSr=44100,latestFs=8192;
+let latestFdb=null,latestTdb=null,latestSr=44100,latestFs=8192;
 
 // Audio callback
 function onAudio(fd,td,sr,fs){
-  latestFdb=fd;latestSr=sr;latestFs=fs;
+  latestFdb=fd;latestTdb=td;latestSr=sr;latestFs=fs;
   if(fd&&!S.measuring){
     // Live display: HPS only (fast, fan noise filtered by clarity)
     const h=fftPeak(fd,sr,fs);
@@ -776,46 +776,24 @@ function startMProc(){
     if(!latestFdb)return;
     locked=true;lockUntil=now+2000;
 
-    // Collect 10 FFT frames over 200ms, pick most frequent peak bin
-    // Fundamental outlasts transient harmonics → wins the vote
-    const FRAMES=10,DURATION=200,FMIN=50,FMAX=160;
-    const votes={};  // bin → count
+    // MPM pitch detection: collect readings over 150ms, IQR filter, median
+    // MPM finds fundamental reliably — IQR removes bad readings
+    const mpmReadings=[];
     const t0=Date.now();
     const iv=setInterval(()=>{
       if(!S.measuring){clearInterval(iv);return;}
-      if(latestFdb){
-        const bh=latestSr/latestFs;
-        const minB=Math.floor(FMIN/bh),maxB=Math.ceil(FMAX/bh);
-        let bestBin=minB,bestVal=-Infinity;
-        for(let b=minB;b<=Math.min(maxB,latestFdb.length-1);b++){
-          if(latestFdb[b]>bestVal){bestVal=latestFdb[b];bestBin=b;}
-        }
-        if(bestVal>-72){
-          const key=bestBin;
-          votes[key]=(votes[key]||0)+1;
-        }
+      if(latestTdb&&latestSr){
+        const r=mpm(latestTdb,latestSr);
+        if(r&&r.clarity>=0.3&&r.frequency>=50&&r.frequency<=160)mpmReadings.push(r.frequency);
       }
-      const elapsed=Date.now()-t0;
-      const framesDone=Object.values(votes).reduce((s,v)=>s+v,0);
-      if(framesDone>=FRAMES||elapsed>DURATION){
+      if(mpmReadings.length>=8||Date.now()-t0>150){
         clearInterval(iv);
-        // Find most-voted bin
-        let bestBin=-1,bestCount=0;
-        for(const [bin,cnt] of Object.entries(votes)){
-          if(cnt>bestCount){bestCount=cnt;bestBin=parseInt(bin);}
-        }
-        if(bestBin<0)return;
-        const bh=latestSr/latestFs;
-        // Parabolic interpolation
-        let hz=bestBin*bh;
-        if(bestBin>0&&bestBin<latestFdb.length-1){
-          const a=latestFdb[bestBin-1],b=latestFdb[bestBin],c=latestFdb[bestBin+1];
-          const dn=2*(2*b-c-a);if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
-        }
-        hz=Math.max(FMIN,Math.min(FMAX,hz));
+        if(!mpmReadings.length){locked=false;return;}
+        const clean=iqrFilter(mpmReadings);
+        const sorted=[...clean].sort((a,b)=>a-b);
+        const hz=sorted[Math.floor(sorted.length/2)];
         let amp=0.65;
-        const bin2=Math.round(hz/bh);
-        if(bin2<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin2]+90)/90));
+        if(latestFdb&&latestSr&&latestFs){const bh=latestSr/latestFs;const bin=Math.round(hz/bh);if(bin<latestFdb.length)amp=Math.max(0,Math.min(1,(latestFdb[bin]+90)/90));}
         col.push({hz,amp});
         SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
         if(cur<dots.length){
@@ -842,15 +820,26 @@ function startMProc(){
   },TO+500);
 }
 
+function iqrFilter(values){
+  // IQR outlier removal — works without target, pure statistics
+  const s=[...values].sort((a,b)=>a-b);
+  const n=s.length;
+  const q1=s[Math.floor(n*0.25)];
+  const q3=s[Math.floor(n*0.75)];
+  const iqr=q3-q1;
+  const lo=q1-1.5*iqr, hi=q3+1.5*iqr;
+  const clean=s.filter(v=>v>=lo&&v<=hi);
+  // Need at least half the values to survive — else use all
+  return clean.length>=Math.ceil(n/2)?clean:s;
+}
+
 function finalize(col,colors){
   S.measuring=false;msess=null;
   SP.setPeaks(col.map((p,i)=>({hz:p.hz,amp:p.amp,color:colors[i]})));
-  // Outlier filtering: take median, keep values within ±10Hz, re-median
-  const sorted=[...col].sort((a,b)=>a.hz-b.hz);
-  const median=sorted[Math.floor(sorted.length/2)].hz;
-  const filtered=sorted.filter(p=>Math.abs(p.hz-median)<=10);
-  const clean=filtered.length>=Math.ceil(col.length/2)?filtered:sorted; // need majority
-  const result=clean[Math.floor(clean.length/2)].hz;
+  const vals=col.map(p=>p.hz);
+  const clean=iqrFilter(vals);
+  const sorted=[...clean].sort((a,b)=>a-b);
+  const result=applyCalFactor(sorted[Math.floor(sorted.length/2)]);
   showMR(result);
 }
 
@@ -1254,10 +1243,9 @@ function runCalMeasurement(targetHz,idx){
     AE.sf(onAudio);
     btn.disabled=false;btn.classList.remove('measuring');btn.textContent='NOCHMAL';
     document.getElementById('cal-prog').textContent='';
-    const sorted=[...readings].sort((a,b)=>a-b);
-    const median=sorted[Math.floor(sorted.length/2)];
-    const clean=sorted.filter(h=>Math.abs(h-median)<=15);
-    const avg=clean.reduce((s,v)=>s+v,0)/clean.length;
+    const calClean=iqrFilter(readings);
+    const calSorted=[...calClean].sort((a,b)=>a-b);
+    const avg=calSorted[Math.floor(calSorted.length/2)];
     calResults[idx]=avg;
     const diff=avg-targetHz;const sign=diff>=0?'+':'';
     liveEl.textContent=avg.toFixed(1)+' Hz';
@@ -1275,7 +1263,7 @@ function runCalMeasurement(targetHz,idx){
   }
 
   AE.sf((fd,td,sr,fs)=>{
-    latestFdb=fd;latestSr=sr;latestFs=fs;
+    latestFdb=fd;latestTdb=td;latestSr=sr;latestFs=fs;
     SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
     if(calMeasuring)calFeed(fd,td,sr);
   });
