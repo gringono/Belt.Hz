@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="BELT.Hz">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#060e07;--bg2:#0d1f10;--bg3:#040a05;--border:#1c3828;--border2:#315c42;--green:#00ff41;--green-dim:#00dd38;--green-mid:#5ecb78;--green-dark:#3fb358;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
+:root{--bg:#060e07;--bg2:#0d1f10;--bg3:#040a05;--border:#1c3828;--border2:#315c42;--green:#00ff41;--green-dim:#00dd38;--green-mid:#5ecb78;--green-dark:#52c46e;--warn:#ffaa00;--err:#ff4444;--font:'Courier New',Courier,monospace}
 html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:var(--font);overflow:hidden}
 #app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto}
 #header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -38,7 +38,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 #panel-messen{flex-direction:row}
 #sidebar{width:210px;min-width:210px;border-right:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
 #canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.clbl{font-size:10px;letter-spacing:2px;color:#7de09a;margin-bottom:4px}
+.clbl{font-size:11px;letter-spacing:2px;color:#9eedb5;margin-bottom:4px}
 .info-val{font-size:13px;color:var(--green);font-weight:700;letter-spacing:1px;padding:2px 0}
 .csel{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--green-dim);font-family:var(--font);font-size:12px;padding:5px;border-radius:3px}
 .brow{display:flex;gap:3px}
@@ -51,15 +51,15 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .rhrow{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;margin-bottom:3px}
 .rhaxis{color:var(--green-mid);font-weight:700}
 .rhhz{color:var(--green)}
-.rhnote{color:#7de09a;line-height:1.6;font-size:9px}
-.rhsrc{color:#5a9a70;font-size:8px}
+.rhnote{color:#9eedb5;line-height:1.6;font-size:10px}
+.rhsrc{color:#7dc494;font-size:9px}
 #btn-measure{margin-top:auto;background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:12px;letter-spacing:2px;padding:12px;border-radius:4px;cursor:pointer;width:100%}
 #btn-measure:hover:not(:disabled){background:#002a10;box-shadow:0 0 8px rgba(0,255,65,.3)}
 #btn-measure:disabled{opacity:.45;cursor:default}
 #spectrum{width:100%;flex:0 0 175px;display:block;cursor:crosshair}
 .axstrip{display:flex;justify-content:space-between;padding:2px 8px;background:var(--bg3);font-size:9px;color:var(--border2);border-bottom:1px solid var(--border);flex-shrink:0}
 #readout{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
-.mlbl{font-size:10px;letter-spacing:2px;color:#7de09a}
+.mlbl{font-size:11px;letter-spacing:2px;color:#9eedb5}
 .mval{font-size:28px;font-weight:700;color:var(--green);line-height:1.1;white-space:nowrap}
 .mval.warn{color:var(--warn)}.mval.dim{color:var(--border2)}
 .mval .u{font-size:12px;font-weight:400;margin-left:1px}
@@ -104,7 +104,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;cursor:pointer}
 .pcard:hover{border-color:var(--green-dark)}.pcard.act{border-color:var(--green)}
 .pcn{font-size:13px;color:var(--green);font-weight:700}
-.pcs{font-size:10px;color:var(--green-mid);margin-top:3px;line-height:1.6}
+.pcs{font-size:11px;color:var(--green-mid);margin-top:3px;line-height:1.6}
 .pcact{display:flex;gap:6px;flex-shrink:0}
 .bsm{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-size:10px;padding:3px 8px;border-radius:3px;font-family:var(--font);cursor:pointer}
 .bsm:hover{border-color:var(--green-dim);color:var(--green)}.bsm.del:hover{border-color:var(--err);color:var(--err)}
@@ -118,7 +118,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .belt-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .belt-item{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.belt-item-info{flex:1;font-size:11px;color:var(--green-mid)}
+.belt-item-info{flex:1;font-size:12px;color:var(--green-mid)}
 .belt-item-hz{color:var(--green);font-weight:700}
 .belt-add-row{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px}
 .belt-add-row .ff{flex:1;min-width:80px}
@@ -126,7 +126,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .bsave:hover{background:#002a10}
 .bcancel{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer;margin-left:8px}
 #panel-referenz{flex-direction:column;overflow-y:auto;padding:12px}
-.refnote{font-size:10px;color:var(--green-dark);margin-bottom:10px;line-height:1.6;border-left:2px solid var(--border2);padding-left:8px}
+.refnote{font-size:11px;color:#9eedb5;margin-bottom:10px;line-height:1.6;border-left:2px solid var(--border2);padding-left:8px}
 .rpcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden}
 .rphead{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .rphead:hover{background:var(--bg3)}
@@ -138,8 +138,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 .rparow:last-child{border-bottom:none}
 .rpaname{color:var(--green-mid);font-weight:700}
 .rpahz{color:var(--green);font-weight:700}
-.rpanote{color:#7de09a;font-size:9px;line-height:1.5}
-.rpasrc{color:#5a9a70;font-size:8px}
+.rpanote{color:#9eedb5;font-size:10px;line-height:1.5}
+.rpasrc{color:#7dc494;font-size:9px}
 .usebtn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:2px;cursor:pointer;white-space:nowrap;align-self:center}
 .usebtn:hover{border-color:var(--green-dim);color:var(--green)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
@@ -159,7 +159,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v5.6</span>
+    <span class="logo-sub">BELT TENSION v5.7</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -279,7 +279,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
       <div class="belt-add-row">
         <div class="ff"><label>NAME</label><input type="text" id="f-belt-name" placeholder="Oberes Belt"></div>
         <div class="ff"><label>ZIEL-Hz</label><input type="number" id="f-belt-hz" placeholder="110" min="20" max="500"></div>
-        <div class="ff"><label>TYP</label><select id="f-belt-type"><option value="gates">Gates LL-2GT</option><option value="gt2">GT2</option></select></div>
+        <div class="ff"><label>TYP</label><select id="f-belt-type"><option value="">kein/unbekannt</option><option value="gates">Gates LL-2GT</option><option value="gt2">GT2</option></select></div>
         <div class="ff"><label>MM</label><select id="f-belt-width"><option value="6">6</option><option value="9">9</option><option value="12">12</option></select></div>
         <button class="bsm" id="btn-add-belt" style="align-self:flex-end;padding:7px 10px">+ RIEMEN</button>
       </div>
@@ -881,8 +881,18 @@ function renderBeltList(){
   const list=document.getElementById('belt-list');list.innerHTML='';
   pendingBelts.forEach((b,i)=>{
     const el=document.createElement('div');el.className='belt-item';
-    el.innerHTML='<div class="belt-item-info"><span class="belt-item-hz">'+b.name+'</span> — '+(b.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+b.beltWidth+'mm'+(b.targetHz?' | '+b.targetHz+' Hz':'')+'</div><button class="bsm del" data-i="'+i+'">X</button>';
-    el.querySelector('[data-i]').addEventListener('click',()=>{pendingBelts.splice(i,1);renderBeltList();});
+    el.innerHTML='<div class="belt-item-info"><span class="belt-item-hz">'+b.name+'</span> — '+(b.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+b.beltWidth+'mm'+(b.targetHz?' | '+b.targetHz+' Hz':'')+'</div><div style="display:flex;gap:4px"><button class="bsm" data-edit="'+i+'">EDIT</button><button class="bsm del" data-del="'+i+'">X</button></div>';
+    el.querySelector('[data-del]').addEventListener('click',()=>{pendingBelts.splice(i,1);renderBeltList();});
+    el.querySelector('[data-edit]').addEventListener('click',()=>{
+      // Fill add-row with this belt for editing, remove from list
+      document.getElementById('f-belt-name').value=b.name;
+      document.getElementById('f-belt-hz').value=b.targetHz||'';
+      document.getElementById('f-belt-type').value=b.beltType;
+      document.getElementById('f-belt-width').value=b.beltWidth;
+      pendingBelts.splice(i,1);
+      renderBeltList();
+      document.getElementById('f-belt-name').focus();
+    });
     list.appendChild(el);
   });
 }
@@ -926,6 +936,8 @@ function saveProf(){
   if(f.dataset.eid){const i=S.profiles.findIndex(x=>x.id===f.dataset.eid);if(i>=0)S.profiles[i]=p;}
   else S.profiles.push(p);
   Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();loadProf(p.id);switchTab('messen');
+  // Re-register audio callback in case it was lost
+  if(S.micOn)AE.sf(onAudio);
 }
 
 function renderRefList(){
