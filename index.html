@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.5</span>
+    <span class="logo-sub">BELT TENSION v6.6</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -346,10 +346,12 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
           <button class="cal-meas-btn" id="cal-btn-0" data-target="92">MESSEN</button>
         </div>
       </div>
-      <div id="cal-prog-0" style="display:none;padding-top:8px">
-        <div class="mprog" id="cal-dots-0" style="justify-content:flex-start;margin-bottom:6px"></div>
-        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-0">Warte auf Signal...</div>
-        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-0"></div>
+      <div id="cal-prog-0" style="display:none;padding:10px 0 6px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:8px">KALIBRIERE</div>
+        <div class="mprog" id="cal-dots-0" style="justify-content:center;margin-bottom:8px;gap:8px"></div>
+        <div style="font-size:12px;color:var(--green-mid);margin-bottom:4px" id="cal-live-0">92 Hz Ton abspielen</div>
+        <div style="font-size:13px;color:var(--green);font-weight:700;min-height:20px" id="cal-res-0"></div>
+        <button class="bret" id="cal-abort-0" style="margin-top:8px;font-size:9px;padding:5px 12px">ABBRECHEN</button>
       </div>
     </div>
 
@@ -360,10 +362,12 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
           <button class="cal-meas-btn" id="cal-btn-1" data-target="125">MESSEN</button>
         </div>
       </div>
-      <div id="cal-prog-1" style="display:none;padding-top:8px">
-        <div class="mprog" id="cal-dots-1" style="justify-content:flex-start;margin-bottom:6px"></div>
-        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-1">Warte auf Signal...</div>
-        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-1"></div>
+      <div id="cal-prog-1" style="display:none;padding:10px 0 6px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:8px">KALIBRIERE</div>
+        <div class="mprog" id="cal-dots-1" style="justify-content:center;margin-bottom:8px;gap:8px"></div>
+        <div style="font-size:12px;color:var(--green-mid);margin-bottom:4px" id="cal-live-1">125 Hz Ton abspielen</div>
+        <div style="font-size:13px;color:var(--green);font-weight:700;min-height:20px" id="cal-res-1"></div>
+        <button class="bret" id="cal-abort-1" style="margin-top:8px;font-size:9px;padding:5px 12px">ABBRECHEN</button>
       </div>
     </div>
 
@@ -374,10 +378,12 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
           <button class="cal-meas-btn" id="cal-btn-2" data-target="160">MESSEN</button>
         </div>
       </div>
-      <div id="cal-prog-2" style="display:none;padding-top:8px">
-        <div class="mprog" id="cal-dots-2" style="justify-content:flex-start;margin-bottom:6px"></div>
-        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-2">Warte auf Signal...</div>
-        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-2"></div>
+      <div id="cal-prog-2" style="display:none;padding:10px 0 6px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:var(--green);letter-spacing:3px;animation:pg 1s infinite;margin-bottom:8px">KALIBRIERE</div>
+        <div class="mprog" id="cal-dots-2" style="justify-content:center;margin-bottom:8px;gap:8px"></div>
+        <div style="font-size:12px;color:var(--green-mid);margin-bottom:4px" id="cal-live-2">160 Hz Ton abspielen</div>
+        <div style="font-size:13px;color:var(--green);font-weight:700;min-height:20px" id="cal-res-2"></div>
+        <button class="bret" id="cal-abort-2" style="margin-top:8px;font-size:9px;padding:5px 12px">ABBRECHEN</button>
       </div>
     </div>
 
@@ -389,7 +395,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 
     <div class="cal-btns" style="margin-top:12px">
       <button class="cal-apply-btn" id="cal-apply-btn" style="display:none">FAKTOR ANWENDEN</button>
-      <button class="cal-reset-btn" id="cal-reset-btn">ZURUECKSETZEN</button>
+      <button class="cal-reset-btn" id="cal-reset-btn">KALIBRIERUNG ZURUECKSETZEN</button>
     </div>
   </div>
 </div>
@@ -1178,11 +1184,14 @@ function runCalMeasurement(targetHz,idx){
   btn.disabled=true;btn.classList.add('measuring');btn.textContent='LAEUFT...';
   res.textContent='';liveEl.textContent=targetHz+' Hz Ton abspielen';
   progEl.style.display='block';
+  // Abort button
+  const abortBtn=document.getElementById('cal-abort-'+idx);
+  if(abortBtn)abortBtn.onclick=()=>{calMeasuring=false;AE.sf(onAudio);btn.disabled=false;btn.classList.remove('measuring');btn.textContent='MESSEN';progEl.style.display='none';};
   // Build 5 dots
   const CAL_REPS=5;dotsEl.innerHTML='';const dots=[];
-  const colors=mColors(REPS);
-  for(let i=0;i<REPS;i++){const d=document.createElement('div');d.className='mpdot';d.style.borderColor=colors[i];dotsEl.appendChild(d);dots.push(d);}
-  dots[0].classList.add('pend');
+  const colors=mColors(CAL_REPS);
+  for(let i=0;i<CAL_REPS;i++){const d=document.createElement('div');d.style.cssText='width:12px;height:12px;border-radius:50%;border:2px solid '+colors[i]+';background:#040a05;display:inline-block;transition:background .2s,box-shadow .2s;';dotsEl.appendChild(d);dots.push(d);}
+  dots[0].style.borderColor=colors[0];dots[0].style.animation='blink .5s infinite';
   document.getElementById('cal-prog').textContent='';
 
   // Collect 5 measurements using same voting logic
@@ -1226,16 +1235,15 @@ function runCalMeasurement(targetHz,idx){
         hz=Math.max(FMIN,Math.min(FMAX,hz));
         const ri=readings.length;
         readings.push(hz);
-        // Update dot
+        // Update dot with inline styles
         if(ri<dots.length){
-          dots[ri].classList.remove('pend');
           dots[ri].style.background=colors[ri];
-          dots[ri].style.borderColor=colors[ri];
           dots[ri].style.boxShadow='0 0 8px '+colors[ri];
+          dots[ri].style.animation='none';
         }
         liveEl.textContent=hz.toFixed(1)+' Hz';
-        liveEl.style.color=colors[ri];
-        if(readings.length<REPS&&ri+1<dots.length)dots[ri+1].classList.add('pend');
+        liveEl.style.color=colors[ri]||'var(--green)';
+        if(readings.length<MEAS_REPS&&ri+1<dots.length){dots[ri+1].style.borderColor=colors[ri+1];dots[ri+1].style.animation='blink .5s infinite';}
         if(readings.length>=MEAS_REPS)finishCal();
       }
     },20);
