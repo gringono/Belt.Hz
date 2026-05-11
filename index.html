@@ -18,7 +18,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 #header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .logo{font-size:20px;font-weight:700;letter-spacing:5px;color:var(--green)}
 .logo-sub{font-size:9px;letter-spacing:2px;color:var(--green-dark);margin-left:10px}
-.logo-by{font-size:9px;letter-spacing:1px;color:var(--border2);margin-left:8px}
+.logo-by{font-size:9px;letter-spacing:1px;color:var(--border2);margin-left:8px;opacity:.7}
 .status-row{display:flex;align-items:center;gap:6px}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--border2)}
 .sdot.active{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
@@ -149,9 +149,33 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
   #sidebar>div,#sidebar>.rhpanel{min-width:140px;flex:1}
   #btn-measure{margin-top:4px;flex:0 0 100%}
   #canvas-area{flex:1;min-height:120px}
-  .logo-by{display:none}
   .rparow{grid-template-columns:80px 70px 1fr auto;font-size:10px}
 }
+
+#panel-kalibrieren{flex-direction:column;overflow-y:auto;padding:12px}
+.cal-note{font-size:10px;color:#9eedb5;line-height:1.7;border-left:2px solid var(--border2);padding-left:10px;margin-bottom:16px}
+.cal-step{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:10px}
+.cal-step-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-step-hz{font-size:18px;font-weight:700;color:var(--green);letter-spacing:2px}
+.cal-step-lbl{font-size:9px;letter-spacing:2px;color:var(--green-dark)}
+.cal-step-result{font-size:13px;color:var(--green-mid)}
+.cal-step-result.ok{color:var(--green)}.cal-step-result.err{color:var(--err)}
+.cal-meas-btn{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:7px 14px;border-radius:3px;cursor:pointer}
+.cal-meas-btn:disabled{opacity:.4;cursor:default}
+.cal-meas-btn.measuring{border-color:var(--warn);color:var(--warn)}
+.cal-result-box{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:12px;text-align:center}
+.cal-factor-lbl{font-size:9px;letter-spacing:2px;color:var(--green-dark);margin-bottom:4px}
+.cal-factor-val{font-size:28px;font-weight:700;color:var(--green)}
+.cal-factor-status{font-size:10px;letter-spacing:2px;margin-top:4px}
+.cal-factor-status.good{color:var(--green)}.cal-factor-status.warn{color:var(--warn)}
+.cal-btns{display:flex;gap:8px;flex-wrap:wrap}
+.cal-apply-btn{background:#001808;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;border-radius:3px;cursor:pointer}
+.cal-reset-btn{background:var(--bg3);border:1px solid var(--border);color:var(--green-mid);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 14px;border-radius:3px;cursor:pointer}
+.cal-active-box{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.cal-active-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.cal-active-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.cal-active-txt{font-size:10px;color:var(--green-mid)}
+.cal-prog{font-size:9px;letter-spacing:1px;color:var(--green-dark);margin-top:3px}
 </style>
 </head>
 <body>
@@ -159,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v5.7</span>
+    <span class="logo-sub">BELT TENSION v6.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -173,6 +197,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
   <button class="tab active" data-tab="messen">MESSEN</button>
   <button class="tab" data-tab="profil">PROFILE</button>
   <button class="tab" data-tab="referenz">REFERENZ</button>
+  <button class="tab" data-tab="kalibrieren">KALIBRIEREN</button>
 </div>
 <div id="main">
 
@@ -514,7 +539,7 @@ const AE=(()=>{
   }
   function stop(){if(raf)cancelAnimationFrame(raf);if(src){src.disconnect();src=null;}if(st){st.getTracks().forEach(t=>t.stop());st=null;}if(ctx){ctx.close().catch(()=>{});ctx=null;}an=null;}
   async function enumD(){try{return(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='audioinput');}catch{return[];}}
-  return{start,stop,enumD,sf(fn){onF=fn;},run(){return!!ctx;}};
+  return{start,stop,enumD,sf(fn){onF=fn;},run(){return!!ctx;},suspended(){return ctx&&ctx.state==='suspended';}};
 })();
 
 // Spectrum display
@@ -936,8 +961,12 @@ function saveProf(){
   if(f.dataset.eid){const i=S.profiles.findIndex(x=>x.id===f.dataset.eid);if(i>=0)S.profiles[i]=p;}
   else S.profiles.push(p);
   Store.sp(S.profiles);f.style.display='none';renderPList();renderPSel();loadProf(p.id);switchTab('messen');
-  // Re-register audio callback in case it was lost
-  if(S.micOn)AE.sf(onAudio);
+  // Full mic restart after profile save — iOS AudioContext can get suspended
+  setTimeout(async()=>{
+    if(S.micOn&&AE.suspended()){await AE.start(S.micId);AE.sf(onAudio);}
+    else if(S.micOn){AE.sf(onAudio);}
+    else{await startMic(true);}
+  },200);
 }
 
 function renderRefList(){
@@ -1022,6 +1051,7 @@ async function init(){
   renderPList();renderRefList();renderHist();
   setSt('BEREIT','');
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  initCalTab();
   startMic(true).catch(()=>{});
 }
 
@@ -1030,6 +1060,165 @@ document.addEventListener('visibilitychange',()=>{
   else{if(!S.micOn)startMic(true).catch(()=>{});}
 });
 window.addEventListener('pagehide',()=>{AE.stop();S.micOn=false;});
+
+// ── CALIBRATION ───────────────────────────────────────────────────────────────
+const CAL_KEY='belthz_cal_v1';
+const CAL_TARGETS=[{hz:92,idx:0},{hz:125,idx:1},{hz:160,idx:2}];
+let calFactor=1.0;
+let calResults=[null,null,null]; // measured values per step
+let calMeasuring=false;
+
+function loadCalFactor(){
+  try{const d=JSON.parse(localStorage.getItem(CAL_KEY)||'{}');calFactor=d.factor||1.0;}catch{calFactor=1.0;}
+  updateCalDisplay();
+}
+
+function saveCalFactor(f){
+  calFactor=f;
+  localStorage.setItem(CAL_KEY,JSON.stringify({factor:f,date:new Date().toLocaleDateString('de-DE')}));
+  updateCalDisplay();
+}
+
+function updateCalDisplay(){
+  const dot=document.getElementById('cal-dot');
+  const txt=document.getElementById('cal-active-txt');
+  if(Math.abs(calFactor-1.0)<0.001){
+    dot.classList.remove('on');
+    txt.textContent='Kein Kalibrierungsfaktor — Faktor = 1.000';
+  }else{
+    dot.classList.add('on');
+    const pct=((calFactor-1)*100).toFixed(1);
+    const sign=calFactor>1?'+':'';
+    txt.textContent='Kalibriert: Faktor '+calFactor.toFixed(4)+' ('+sign+pct+'%)';
+  }
+}
+
+function applyCalFactor(hz){return hz*calFactor;}
+
+function runCalMeasurement(targetHz,idx){
+  if(calMeasuring)return;
+  if(!S.micOn){startMic(false).then(ok=>{if(ok)runCalMeasurement(targetHz,idx);});return;}
+  calMeasuring=true;
+  const btn=document.getElementById('cal-btn-'+idx);
+  const res=document.getElementById('cal-res-'+idx);
+  btn.disabled=true;btn.classList.add('measuring');btn.textContent='LAEUFT...';
+  res.textContent='...';
+  document.getElementById('cal-prog').textContent='Messe '+targetHz+' Hz — bitte Ton abspielen';
+
+  // Collect 5 measurements using same voting logic
+  const REPS=5,FMIN=50,FMAX=200;
+  const readings=[];
+  let bgRms=null,bgCount=0,locked=false,lockUntil=0;
+  const T0=Date.now(),TO=25000;
+
+  function calFeed(fd,td,sr){
+    const rms=td?Math.sqrt(td.reduce((s,v)=>s+v*v,0)/td.length):0;
+    if(bgRms===null){bgRms=rms;bgCount=0;}
+    bgRms=bgRms*0.992+rms*0.008;bgCount++;
+    if(bgCount<15)return;
+    if(locked){bgRms=bgRms*0.997+rms*0.003;if(Date.now()<lockUntil)return;if(rms>bgRms*1.8)return;locked=false;}
+    if(rms<bgRms*1.3)bgRms=bgRms*0.996+rms*0.004;
+    if(rms<bgRms*2.0||rms<0.0008)return;
+    if(!latestFdb)return;
+    locked=true;lockUntil=Date.now()+2000;
+    // Voting over 200ms
+    const votes={};const t0=Date.now();
+    const iv=setInterval(()=>{
+      if(!calMeasuring){clearInterval(iv);return;}
+      if(latestFdb){
+        const bh=latestSr/latestFs;
+        const minB=Math.floor(FMIN/bh),maxB=Math.ceil(FMAX/bh);
+        let bestBin=minB,bestVal=-Infinity;
+        for(let b=minB;b<=Math.min(maxB,latestFdb.length-1);b++){if(latestFdb[b]>bestVal){bestVal=latestFdb[b];bestBin=b;}}
+        if(bestVal>-72)votes[bestBin]=(votes[bestBin]||0)+1;
+      }
+      const frames=Object.values(votes).reduce((s,v)=>s+v,0);
+      if(frames>=10||Date.now()-t0>200){
+        clearInterval(iv);
+        let bestBin=-1,bestCount=0;
+        for(const[bin,cnt]of Object.entries(votes)){if(cnt>bestCount){bestCount=cnt;bestBin=parseInt(bin);}}
+        if(bestBin<0)return;
+        const bh=latestSr/latestFs;let hz=bestBin*bh;
+        if(bestBin>0&&bestBin<latestFdb.length-1){
+          const a=latestFdb[bestBin-1],b=latestFdb[bestBin],c=latestFdb[bestBin+1];
+          const dn=2*(2*b-c-a);if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
+        }
+        hz=Math.max(FMIN,Math.min(FMAX,hz));
+        readings.push(hz);
+        document.getElementById('cal-prog').textContent=readings.length+'/'+REPS+' Messungen — '+readings.map(h=>h.toFixed(1)).join(', ')+' Hz';
+        if(readings.length>=REPS)finishCal();
+      }
+    },20);
+  }
+
+  function finishCal(){
+    calMeasuring=false;
+    AE.sf(onAudio);
+    btn.disabled=false;btn.classList.remove('measuring');btn.textContent='NOCHMAL';
+    const sorted=[...readings].sort((a,b)=>a-b);
+    const median=sorted[Math.floor(sorted.length/2)];
+    // Outlier filter
+    const clean=sorted.filter(h=>Math.abs(h-median)<=15);
+    const avg=clean.reduce((s,v)=>s+v,0)/clean.length;
+    calResults[idx]=avg;
+    const diff=avg-targetHz;const sign=diff>=0?'+':'';
+    res.textContent=avg.toFixed(1)+' Hz ('+sign+diff.toFixed(1)+')';
+    res.className='cal-step-result'+(Math.abs(diff)<5?' ok':' err');
+    document.getElementById('cal-prog').textContent='';
+    updateCalFactorPreview();
+  }
+
+  function timeout(){
+    if(!calMeasuring)return;
+    calMeasuring=false;AE.sf(onAudio);
+    btn.disabled=false;btn.classList.remove('measuring');btn.textContent='NOCHMAL';
+    res.textContent='Timeout';document.getElementById('cal-prog').textContent='';
+  }
+
+  AE.sf((fd,td,sr,fs)=>{
+    latestFdb=fd;latestSr=sr;latestFs=fs;
+    SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
+    if(calMeasuring)calFeed(fd,td,sr);
+  });
+  setTimeout(timeout,TO);
+}
+
+function updateCalFactorPreview(){
+  const valid=calResults.filter(r=>r!==null);
+  if(!valid.length){document.getElementById('cal-result-box').style.display='none';document.getElementById('cal-apply-btn').style.display='none';return;}
+  // Factor = average of (target/measured) for each completed step
+  let factorSum=0;
+  CAL_TARGETS.forEach(({hz,idx})=>{if(calResults[idx]!==null)factorSum+=hz/calResults[idx];});
+  const f=factorSum/valid.length;
+  document.getElementById('cal-result-box').style.display='block';
+  document.getElementById('cal-apply-btn').style.display='block';
+  document.getElementById('cal-factor-val').textContent=f.toFixed(4);
+  const pct=((f-1)*100).toFixed(1),sign=f>1?'+':'';
+  const statusEl=document.getElementById('cal-factor-status');
+  const good=Math.abs(f-1)<0.05;
+  statusEl.textContent=sign+pct+'% Abweichung — '+(good?'KALIBRIERT ✓':'ABWEICHUNG ERKANNT');
+  statusEl.className='cal-factor-status '+(good?'good':'warn');
+  document.getElementById('cal-apply-btn').dataset.factor=f;
+}
+
+function initCalTab(){
+  loadCalFactor();
+  CAL_TARGETS.forEach(({hz,idx})=>{
+    document.getElementById('cal-btn-'+idx).addEventListener('click',()=>runCalMeasurement(hz,idx));
+  });
+  document.getElementById('cal-apply-btn').addEventListener('click',()=>{
+    const f=parseFloat(document.getElementById('cal-apply-btn').dataset.factor);
+    if(f&&f>0.5&&f<2.0){saveCalFactor(f);alert('Kalibrierungsfaktor '+f.toFixed(4)+' gespeichert.');}
+  });
+  document.getElementById('cal-reset-btn').addEventListener('click',()=>{
+    saveCalFactor(1.0);calResults=[null,null,null];
+    CAL_TARGETS.forEach(({idx})=>{document.getElementById('cal-res-'+idx).textContent='---';document.getElementById('cal-btn-'+idx).textContent='MESSEN';});
+    document.getElementById('cal-result-box').style.display='none';
+    document.getElementById('cal-apply-btn').style.display='none';
+    document.getElementById('cal-prog').textContent='';
+  });
+}
+
 window.addEventListener('load',init);
 </script>
 </body>
