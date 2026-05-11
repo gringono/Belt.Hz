@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.1</span>
+    <span class="logo-sub">BELT TENSION v6.3</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -341,31 +341,43 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 
     <div class="cal-step">
       <div class="cal-step-head">
-        <div><div class="cal-step-hz">92 Hz</div><div class="cal-step-lbl">PRUSA UNTERES BELT</div></div>
+        <div><div class="cal-step-hz">92 Hz</div></div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span class="cal-step-result" id="cal-res-0">---</span>
           <button class="cal-meas-btn" id="cal-btn-0" data-target="92">MESSEN</button>
         </div>
       </div>
-    </div>
-
-    <div class="cal-step">
-      <div class="cal-step-head">
-        <div><div class="cal-step-hz">125 Hz</div><div class="cal-step-lbl">MITTE</div></div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="cal-step-result" id="cal-res-1">---</span>
-          <button class="cal-meas-btn" id="cal-btn-1" data-target="125">MESSEN</button>
-        </div>
+      <div id="cal-prog-0" style="display:none;padding-top:8px">
+        <div class="mprog" id="cal-dots-0" style="justify-content:flex-start;margin-bottom:6px"></div>
+        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-0">Warte auf Signal...</div>
+        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-0"></div>
       </div>
     </div>
 
     <div class="cal-step">
       <div class="cal-step-head">
-        <div><div class="cal-step-hz">160 Hz</div><div class="cal-step-lbl">HOCH</div></div>
+        <div><div class="cal-step-hz">125 Hz</div></div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span class="cal-step-result" id="cal-res-2">---</span>
+          <button class="cal-meas-btn" id="cal-btn-1" data-target="125">MESSEN</button>
+        </div>
+      </div>
+      <div id="cal-prog-1" style="display:none;padding-top:8px">
+        <div class="mprog" id="cal-dots-1" style="justify-content:flex-start;margin-bottom:6px"></div>
+        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-1">Warte auf Signal...</div>
+        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-1"></div>
+      </div>
+    </div>
+
+    <div class="cal-step">
+      <div class="cal-step-head">
+        <div><div class="cal-step-hz">160 Hz</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
           <button class="cal-meas-btn" id="cal-btn-2" data-target="160">MESSEN</button>
         </div>
+      </div>
+      <div id="cal-prog-2" style="display:none;padding-top:8px">
+        <div class="mprog" id="cal-dots-2" style="justify-content:flex-start;margin-bottom:6px"></div>
+        <div style="font-size:13px;color:var(--green);font-weight:700" id="cal-live-2">Warte auf Signal...</div>
+        <div style="font-size:10px;color:var(--green-dark);margin-top:2px" id="cal-res-2"></div>
       </div>
     </div>
 
@@ -1160,12 +1172,21 @@ function runCalMeasurement(targetHz,idx){
   calMeasuring=true;
   const btn=document.getElementById('cal-btn-'+idx);
   const res=document.getElementById('cal-res-'+idx);
+  const liveEl=document.getElementById('cal-live-'+idx);
+  const progEl=document.getElementById('cal-prog-'+idx);
+  const dotsEl=document.getElementById('cal-dots-'+idx);
   btn.disabled=true;btn.classList.add('measuring');btn.textContent='LAEUFT...';
-  res.textContent='...';
-  document.getElementById('cal-prog').textContent='Messe '+targetHz+' Hz — bitte Ton abspielen';
+  res.textContent='';liveEl.textContent='Warte auf Signal...';
+  progEl.style.display='block';
+  // Build 5 dots
+  const CAL_REPS=5;dotsEl.innerHTML='';const dots=[];
+  const colors=mColors(REPS);
+  for(let i=0;i<REPS;i++){const d=document.createElement('div');d.className='mpdot';d.style.borderColor=colors[i];dotsEl.appendChild(d);dots.push(d);}
+  dots[0].classList.add('pend');
+  document.getElementById('cal-prog').textContent='';
 
   // Collect 5 measurements using same voting logic
-  const REPS=5,FMIN=50,FMAX=200;
+  const MEAS_REPS=5,FMIN=50,FMAX=200;
   const readings=[];
   let bgRms=null,bgCount=0,locked=false,lockUntil=0;
   const T0=Date.now(),TO=25000;
@@ -1203,9 +1224,19 @@ function runCalMeasurement(targetHz,idx){
           const dn=2*(2*b-c-a);if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
         }
         hz=Math.max(FMIN,Math.min(FMAX,hz));
+        const ri=readings.length;
         readings.push(hz);
-        document.getElementById('cal-prog').textContent=readings.length+'/'+REPS+' Messungen — '+readings.map(h=>h.toFixed(1)).join(', ')+' Hz';
-        if(readings.length>=REPS)finishCal();
+        // Update dot
+        if(ri<dots.length){
+          dots[ri].classList.remove('pend');
+          dots[ri].style.background=colors[ri];
+          dots[ri].style.borderColor=colors[ri];
+          dots[ri].style.boxShadow='0 0 8px '+colors[ri];
+        }
+        liveEl.textContent=hz.toFixed(1)+' Hz';
+        liveEl.style.color=colors[ri];
+        if(readings.length<REPS&&ri+1<dots.length)dots[ri+1].classList.add('pend');
+        if(readings.length>=MEAS_REPS)finishCal();
       }
     },20);
   }
@@ -1216,14 +1247,14 @@ function runCalMeasurement(targetHz,idx){
     btn.disabled=false;btn.classList.remove('measuring');btn.textContent='NOCHMAL';
     const sorted=[...readings].sort((a,b)=>a-b);
     const median=sorted[Math.floor(sorted.length/2)];
-    // Outlier filter
     const clean=sorted.filter(h=>Math.abs(h-median)<=15);
     const avg=clean.reduce((s,v)=>s+v,0)/clean.length;
     calResults[idx]=avg;
     const diff=avg-targetHz;const sign=diff>=0?'+':'';
-    res.textContent=avg.toFixed(1)+' Hz ('+sign+diff.toFixed(1)+')';
+    liveEl.textContent=avg.toFixed(1)+' Hz';
+    liveEl.style.color=Math.abs(diff)<5?'var(--green)':'var(--warn)';
+    res.textContent='Soll: '+targetHz+' Hz | Delta: '+sign+diff.toFixed(1)+' Hz';
     res.className='cal-step-result'+(Math.abs(diff)<5?' ok':' err');
-    document.getElementById('cal-prog').textContent='';
     updateCalFactorPreview();
   }
 
