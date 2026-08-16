@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
 <div id="header">
   <div style="display:flex;align-items:center">
     <span class="logo">BELT.Hz</span>
-    <span class="logo-sub">BELT TENSION v6.8</span>
+    <span class="logo-sub">BELT TENSION v7.0</span>
     <span class="logo-by">by MeltingHero</span>
   </div>
   <div class="status-row">
@@ -251,6 +251,8 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
         <div class="mi-hz-big" id="mi-hz">---</div>
         <div id="mi-delta" style="font-size:16px;font-weight:700;margin:4px 0 2px"></div>
         <div id="mi-verdict" style="font-size:10px;letter-spacing:2px;margin-bottom:6px"></div>
+        <div id="mi-conf" class="mi-conf"></div>
+        <div id="mi-tension" style="font-size:10px;color:#7dc494;margin-bottom:6px;display:none"></div>
         <div class="mi-axis-lbl">ALS ACHSE SPEICHERN:</div>
         <div class="axselw" id="axbtns">
           <button class="axbtn on" data-axis="A">A</button>
@@ -306,6 +308,7 @@ html,body{height:100%;background:var(--bg);color:var(--green-mid);font-family:va
         <div class="ff"><label>ZIEL-Hz</label><input type="number" id="f-belt-hz" placeholder="110" min="20" max="500"></div>
         <div class="ff"><label>TYP</label><select id="f-belt-type"><option value="">kein/unbekannt</option><option value="gates">Gates LL-2GT</option><option value="gt2">GT2</option></select></div>
         <div class="ff"><label>MM</label><select id="f-belt-width"><option value="6">6</option><option value="9">9</option><option value="12">12</option></select></div>
+        <div class="ff"><label>FREIE LÄNGE mm</label><input type="number" id="f-belt-len" placeholder="opt." min="20" max="600"></div>
         <button class="bsm" id="btn-add-belt" style="align-self:flex-end;padding:7px 10px">+ RIEMEN</button>
       </div>
       <div style="margin-top:8px">
@@ -456,31 +459,19 @@ function mpm(buf,sr){
   // Use last 4096 samples — freshest signal, avoids empty buffer tail
   buf=buf.length>4096?buf.slice(buf.length-4096):buf;
   const n=buf.length;
-  const minTau=Math.floor(sr/500); // max 500Hz
-  const maxTau=Math.min(Math.ceil(sr/25),Math.floor(n/2)-1); // min 25Hz
+  const minTau=Math.floor(sr/250); // max 250Hz
+  const maxTau=Math.min(Math.ceil(sr/40),Math.floor(n/2)-1); // min 40Hz
   if(maxTau<=minTau)return null;
 
   // Compute NSDF (Normalized Square Difference Function)
   // nsdf[tau] = 2*acf(tau) / (m(tau))  where m(tau) = sum(x[i]^2) + sum(x[i+tau]^2)
   const nsdf=new Float32Array(maxTau+1);
-  // Running sum of squares for efficiency
-  let m=0;
-  for(let i=0;i<n;i++)m+=buf[i]*buf[i];
-  m*=2; // m(0) = 2 * sum(x^2)
-  let headSq=0,tailSq=0;
   for(let tau=0;tau<=maxTau;tau++){
-    if(tau>0){
-      headSq+=buf[tau-1]*buf[tau-1];
-      tailSq+=buf[n-tau]*buf[n-tau];
-      m=2*(0); // recalculate
-      // m(tau) = sum(x[0..n-tau-1]^2) + sum(x[tau..n-1]^2)
-      // = (total - tail) + (total - head) where total=sum of all squares
-    }
-    // Compute autocorrelation at this lag
+    // Autocorrelation at this lag
     let acf=0;
     const lim=n-tau;
     for(let i=0;i<lim;i++)acf+=buf[i]*buf[i+tau];
-    // Compute m(tau) directly
+    // m(tau) directly
     let mt=0;
     for(let i=0;i<lim;i++)mt+=buf[i]*buf[i]+buf[i+tau]*buf[i+tau];
     nsdf[tau]=mt>1e-8?(2*acf)/mt:0;
@@ -518,39 +509,16 @@ function mpm(buf,sr){
   }
 
   const freq=sr/exactTau;
-  if(freq<25||freq>500)return null;
+  if(freq<40||freq>250)return null;
   return{frequency:freq,clarity:highest};
-}
-
-// ── HPS (Harmonic Product Spectrum) ──────────────────────────────────────────
-// Fast FFT-based fundamental detection — used for live display + voting confirmation
-function hps(fd,sr,fs,harmonics=4){
-  const bh=sr/fs;
-  const minBin=Math.floor(50/bh),maxBin=Math.ceil(160/bh);
-  const mag=new Float32Array(fd.length);
-  for(let i=0;i<fd.length;i++)mag[i]=Math.pow(10,fd[i]/20);
-  const result=new Float32Array(maxBin+1);
-  for(let b=minBin;b<=maxBin;b++){
-    result[b]=mag[b];
-    for(let h=2;h<=harmonics;h++){const hb=Math.round(b*h);if(hb<mag.length)result[b]*=mag[hb];}
-  }
-  let bestBin=minBin,bestVal=0;
-  for(let b=minBin;b<=maxBin;b++){if(result[b]>bestVal){bestVal=result[b];bestBin=b;}}
-  let hz=bestBin*bh;
-  if(bestBin>minBin&&bestBin<maxBin){
-    const a=result[bestBin-1],b=result[bestBin],c=result[bestBin+1];
-    const dn=2*(2*b-c-a);
-    if(Math.abs(dn)>1e-12)hz=(bestBin+(c-a)/dn)*bh;
-  }
-  return Math.max(25,Math.min(500,hz));
 }
 
 // ── FFT PEAK (for transient pluck detection) ─────────────────────────────────
 // For a plucked belt, the fundamental IS the loudest peak.
-// Simpler and more reliable than HPS for transient signals.
-function fftPeak(fd,sr,fs){
+// fmin/fmax begrenzen die Suche auf das aktuelle Frequenzband.
+function fftPeak(fd,sr,fs,fmin=40,fmax=250){
   const bh=sr/fs;
-  const minBin=Math.floor(50/bh),maxBin=Math.ceil(160/bh);
+  const minBin=Math.floor(fmin/bh),maxBin=Math.ceil(fmax/bh);
   let bestBin=minBin,bestVal=-Infinity;
   for(let b=minBin;b<=Math.min(maxBin,fd.length-1);b++){if(fd[b]>bestVal){bestVal=fd[b];bestBin=b;}}
   if(bestVal<-72)return null; // too quiet — no real signal
@@ -560,27 +528,27 @@ function fftPeak(fd,sr,fs){
     const a=fd[bestBin-1],b=fd[bestBin],c=fd[bestBin+1];
     const dn=2*(2*b-c-a);if(Math.abs(dn)>0.001)hz=(bestBin+(c-a)/dn)*bh;
   }
-  return Math.max(55,Math.min(300,hz));
+  return Math.max(fmin,Math.min(fmax,hz));
 }
 
-// ── VOTING: MPM + HPS ────────────────────────────────────────────────────────
-function vote(td,fd,sr,fs){
-  const mR=mpm(td,sr);
-  if(!mR||mR.clarity<0.3)return{hz:0,valid:false};
-  const mHz=mR.frequency;
-  const hHz=hps(fd,sr,fs);
-  if(Math.abs(mHz-hHz)<mHz*0.12)return{hz:(mHz+hHz)/2,valid:true};
-  for(const f of[2,3]){
-    if(Math.abs(mHz*f-hHz)<hHz*0.12)return{hz:mHz,valid:true};
-    if(Math.abs(hHz*f-mHz)<mHz*0.12)return{hz:mHz,valid:true};
-  }
-  return{hz:0,valid:false};
+// ── FREQUENZBAND ─────────────────────────────────────────────────────────────
+// Hartes Sanity-Fenster 40–250 Hz; mit Ziel enges relatives Fenster (Ziel×0.6..1.5).
+// Das ±40–50%-Fenster verwirft Oktavfehler (2×/½ = ±100%) automatisch.
+const F_HARD_MIN=40,F_HARD_MAX=250;
+function freqBand(){
+  if(S.tgt)return{lo:Math.max(F_HARD_MIN,S.tgt*0.6),hi:Math.min(F_HARD_MAX,S.tgt*1.5)};
+  return{lo:60,hi:200};
 }
 
-// MPM clarity threshold raised to 0.45 — prevents noise from registering
-function mpmClarityOk(buf,sr){
-  const r=mpm(buf,sr);
-  return r&&r.clarity>=0.45?r:null;
+// ── SPANNUNG (Newton) ────────────────────────────────────────────────────────
+// Lineare Massendichte je Riemenbreite (Schätzung, Stahl-Kern 2GT), kg/m
+const BELT_MU={6:0.0050,9:0.0075,12:0.0100};
+// Transversalschwingung: T = 4 · L² · μ · f²  (L in m, μ in kg/m, f in Hz → Newton)
+function beltTension(hz,freeLenMm,widthMm){
+  const mu=BELT_MU[widthMm];
+  if(!mu||!freeLenMm||freeLenMm<=0)return null;
+  const L=freeLenMm/1000;
+  return 4*L*L*mu*hz*hz;
 }
 
 // Measure colors
@@ -668,9 +636,10 @@ let latestFdb=null,latestTdb=null,latestSr=44100,latestFs=8192;
 function onAudio(fd,td,sr,fs){
   latestFdb=fd;latestTdb=td;latestSr=sr;latestFs=fs;
   if(fd&&!S.measuring){
-    // Live display: HPS only (fast, fan noise filtered by clarity)
-    const h=fftPeak(fd,sr,fs);
-    if(h&&h>=50&&h<=160){S.lastHz=h;updateReadout(h);}
+    // Live-Anzeige: FFT-Peak im aktuellen Frequenzband
+    const band=freqBand();
+    const h=fftPeak(fd,sr,fs,band.lo,band.hi);
+    if(h){S.lastHz=h;updateReadout(h);}
   }
   SP.draw(fd,sr,fs,S.lastHz,S.tgt||0);
   if(S.measuring&&msess){
@@ -751,7 +720,7 @@ function startMProc(){
   if(dots[0])dots[0].classList.add('pend');
 
   const col=[];let cur=0;
-  const T0=Date.now(),TO=20000;
+  const T0=Date.now(),TO=Math.max(20000,reps*3000);
   let bgRms=null,bgCount=0;
   let locked=false,lockUntil=0;
 
@@ -784,7 +753,8 @@ function startMProc(){
       if(!S.measuring){clearInterval(iv);return;}
       if(latestTdb&&latestSr){
         const r=mpm(latestTdb,latestSr);
-        if(r&&r.clarity>=0.3&&r.frequency>=50&&r.frequency<=160)mpmReadings.push(r.frequency);
+        const band=freqBand();
+        if(r&&r.clarity>=0.3&&r.frequency>=band.lo&&r.frequency<=band.hi)mpmReadings.push(r.frequency);
       }
       if(mpmReadings.length>=8||Date.now()-t0>150){
         clearInterval(iv);
@@ -839,11 +809,23 @@ function finalize(col,colors){
   const vals=col.map(p=>p.hz);
   const clean=iqrFilter(vals);
   const sorted=[...clean].sort((a,b)=>a-b);
-  const result=applyCalFactor(sorted[Math.floor(sorted.length/2)]);
-  showMR(result);
+  const median=sorted[Math.floor(sorted.length/2)];
+  const result=applyCalFactor(median);
+  // Vertrauensmetrik: Streuung der bereinigten Zupf-Werte
+  const mean=clean.reduce((s,v)=>s+v,0)/clean.length;
+  const sd=Math.sqrt(clean.reduce((s,v)=>s+(v-mean)*(v-mean),0)/clean.length);
+  const relPct=median>0?(sd/median)*100:0;
+  const conf={
+    spread:applyCalFactor(sd),   // ± in Hz, gleiche Skala wie result
+    relPct,
+    nUsed:clean.length,
+    nTotal:S.reps,
+    level:(clean.length<Math.ceil(S.reps/2)||relPct>3)?'low':(relPct>1.5?'mid':'high')
+  };
+  showMR(result,conf);
 }
 
-function showMR(hz){
+function showMR(hz,conf){
   document.getElementById('mi-progress').style.display='none';
   document.getElementById('mi-done').style.display='block';
   document.getElementById('btn-mcancel-inline').style.display='none';
@@ -858,6 +840,22 @@ function showMR(hz){
     else if(d>10){de.style.color='var(--warn)';ve.style.color='var(--warn)';ve.textContent='ZU STRAFF';}
     else{de.style.color='var(--green)';ve.style.color='var(--green-dark)';ve.textContent='IM BEREICH';}
   }else{de.textContent='';ve.textContent='';}
+  // Vertrauensmetrik
+  const ce=document.getElementById('mi-conf');
+  if(conf){
+    let label,color;
+    if(conf.level==='high'){label='STABIL';color='var(--green-dark)';}
+    else if(conf.level==='mid'){label='OK';color='var(--warn)';}
+    else{label='UNSICHER — nochmal messen';color='var(--err)';}
+    ce.innerHTML='±'+conf.spread.toFixed(1)+' Hz · '+conf.nUsed+'/'+conf.nTotal+' Zupfer · <span style="color:'+color+'">'+label+'</span>';
+  }else ce.textContent='';
+  // Spannung in Newton (falls freie Länge + bekannte Breite)
+  const ne=document.getElementById('mi-tension');
+  const prof=S.profiles.find(p=>p.id===S.pid);
+  const belt=prof?.belts?.find(b=>b.id===S.activeBeltId);
+  const T=belt?beltTension(hz,belt.freeLen,belt.beltWidth):null;
+  if(T!=null){ne.textContent='≈ '+T.toFixed(1)+' N ('+(T/9.81).toFixed(2)+' kgf) · geschätzt';ne.style.display='block';}
+  else ne.style.display='none';
   document.getElementById('measure-inline').dataset.hz=hz;
   resetMBtn();
 }
@@ -879,10 +877,11 @@ function acceptM(){
   else if(axis==='B'||axis==='Y')S.cmpB={hz,axis};
   const prof=S.profiles.find(p=>p.id===S.pid);
   const belt=prof?.belts?.find(b=>b.id===S.activeBeltId);
-  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:prof?prof.name:'---',belt:belt?belt.name:axis,hz:hz.toFixed(1)};
+  const e={id:Date.now(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),profile:prof?prof.name:'---',belt:belt?belt.name:axis,axis,hz:hz.toFixed(1)};
   S.history.unshift(e);Store.sh(S.history);
   SP.setPeaks([]);updateReadout(hz);updateCmp();renderHist();
   document.getElementById('measure-inline').style.display='none';
+  document.getElementById('readout').style.display='';
   resetMBtn();
 }
 
@@ -907,7 +906,7 @@ function updateBeltDisplay(prof){
   const belt=prof?.belts?.find(b=>b.id===S.activeBeltId)||prof?.belts?.[0];
   if(belt){
     document.getElementById('belt-active-name').textContent=belt.name;
-    document.getElementById('belt-active-info').textContent=(belt.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+belt.beltWidth+'mm'+(belt.targetHz?' | Ziel '+belt.targetHz+' Hz':'');
+    document.getElementById('belt-active-info').textContent=(belt.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+belt.beltWidth+'mm'+(belt.targetHz?' | Ziel '+belt.targetHz+' Hz':'')+(belt.freeLen?' | L='+belt.freeLen+'mm':'');
     S.tgt=belt.targetHz||null;
   }else{document.getElementById('belt-active-name').textContent='---';document.getElementById('belt-active-info').textContent='';}
   updateRefHint(prof?.printerId);
@@ -972,7 +971,7 @@ function renderBeltList(){
   const list=document.getElementById('belt-list');list.innerHTML='';
   pendingBelts.forEach((b,i)=>{
     const el=document.createElement('div');el.className='belt-item';
-    el.innerHTML='<div class="belt-item-info"><span class="belt-item-hz">'+b.name+'</span> — '+(b.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+b.beltWidth+'mm'+(b.targetHz?' | '+b.targetHz+' Hz':'')+'</div><div style="display:flex;gap:4px"><button class="bsm" data-edit="'+i+'">EDIT</button><button class="bsm del" data-del="'+i+'">X</button></div>';
+    el.innerHTML='<div class="belt-item-info"><span class="belt-item-hz">'+b.name+'</span> — '+(b.beltType==='gates'?'Gates LL-2GT':'GT2')+' '+b.beltWidth+'mm'+(b.targetHz?' | '+b.targetHz+' Hz':'')+(b.freeLen?' | L='+b.freeLen+'mm':'')+'</div><div style="display:flex;gap:4px"><button class="bsm" data-edit="'+i+'">EDIT</button><button class="bsm del" data-del="'+i+'">X</button></div>';
     el.querySelector('[data-del]').addEventListener('click',()=>{pendingBelts.splice(i,1);renderBeltList();});
     el.querySelector('[data-edit]').addEventListener('click',()=>{
       // Fill add-row with this belt for editing, remove from list
@@ -980,6 +979,7 @@ function renderBeltList(){
       document.getElementById('f-belt-hz').value=b.targetHz||'';
       document.getElementById('f-belt-type').value=b.beltType;
       document.getElementById('f-belt-width').value=b.beltWidth;
+      document.getElementById('f-belt-len').value=b.freeLen||'';
       pendingBelts.splice(i,1);
       renderBeltList();
       document.getElementById('f-belt-name').focus();
@@ -1103,9 +1103,10 @@ async function init(){
     const hz=parseFloat(document.getElementById('f-belt-hz').value)||null;
     const type=document.getElementById('f-belt-type').value;
     const width=parseInt(document.getElementById('f-belt-width').value);
+    const freeLen=parseFloat(document.getElementById('f-belt-len').value)||null;
     if(!name){alert('Riemen-Name eingeben');return;}
-    pendingBelts.push({id:'b_'+Date.now(),name,beltType:type,beltWidth:width,targetHz:hz});
-    document.getElementById('f-belt-name').value='';document.getElementById('f-belt-hz').value='';
+    pendingBelts.push({id:'b_'+Date.now(),name,beltType:type,beltWidth:width,targetHz:hz,freeLen});
+    document.getElementById('f-belt-name').value='';document.getElementById('f-belt-hz').value='';document.getElementById('f-belt-len').value='';
     renderBeltList();
   });
   document.getElementById('mic-select').addEventListener('change',e=>{S.micId=e.target.value||null;if(S.micOn){AE.stop();S.micOn=false;startMic();}});
