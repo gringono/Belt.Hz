@@ -1,5 +1,5 @@
-// BELT.Hz Service Worker v1.1.0
-const CACHE = 'belt-hz-v1.1.0';
+// BELT.Hz Service Worker v1.2.0
+const CACHE = 'belt-hz-v1.2.0';
 const ASSETS = [
   './',
   './index.html',
